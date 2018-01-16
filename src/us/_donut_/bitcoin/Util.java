@@ -6,6 +6,7 @@ import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -52,30 +53,35 @@ class Util {
         ItemStack itemStack = new ItemStack(item, 1, dataValue);
         ItemMeta itemMeta = itemStack.getItemMeta();
         itemMeta.setDisplayName(name);
-        if (lore != null) { itemMeta.setLore(Arrays.asList(lore.split("~~"))); }
+        if (lore != null) { itemMeta.setLore(Arrays.asList(lore.split("\n"))); }
         itemStack.setItemMeta(itemMeta);
         return itemStack;
     }
 
     @SuppressWarnings("deprecation")
-    ItemStack getSkull(UUID playerUUID, String displayName, String lore) {
+    ItemStack getSkull(UUID playerUUID, String playerName, String displayName, String lore) {
         ItemStack skull = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
-        if (!skullTextures.containsKey(playerUUID)) {
-            try {
-                URL address = new URL("https://sessionserver.mojang.com/session/minecraft/profile/" + playerUUID.toString().replace("-", ""));
-                InputStreamReader pageInput = new InputStreamReader(address.openStream());
-                BufferedReader source = new BufferedReader(pageInput);
-                String sourceLine = source.readLine();
-                skullTextures.put(playerUUID, sourceLine.split("\"")[17]);
-            } catch (IOException e) {
-                e.printStackTrace();
+        if (plugin.getServer().getOnlineMode()) {
+            if (!skullTextures.containsKey(playerUUID)) {
+                try {
+                    URL address = new URL("https://sessionserver.mojang.com/session/minecraft/profile/" + playerUUID.toString().replace("-", ""));
+                    InputStreamReader pageInput = new InputStreamReader(address.openStream());
+                    BufferedReader source = new BufferedReader(pageInput);
+                    String sourceLine = source.readLine();
+                    skullTextures.put(playerUUID, sourceLine.split("\"")[17]);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
+            UUID hashAsId = new UUID(skullTextures.get(playerUUID).hashCode(), skullTextures.get(playerUUID).hashCode());
+            skull = Bukkit.getUnsafe().modifyItemStack(skull, "{SkullOwner:{Id:\"" + hashAsId + "\",Properties:{textures:[{Value:\"" + skullTextures.get(playerUUID) + "\"}]}}}");
+        } else {
+            SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();
+            skullMeta.setOwner(playerName);
         }
-        UUID hashAsId = new UUID(skullTextures.get(playerUUID).hashCode(), skullTextures.get(playerUUID).hashCode());
-        skull = Bukkit.getUnsafe().modifyItemStack(skull, "{SkullOwner:{Id:\"" + hashAsId + "\",Properties:{textures:[{Value:\"" + skullTextures.get(playerUUID) + "\"}]}}}");
         ItemMeta skullMeta = skull.getItemMeta();
         skullMeta.setDisplayName(displayName);
-        String[] multiLineLore = lore.split("~~");
+        String[] multiLineLore = lore.split("\n");
         skullMeta.setLore(Arrays.asList(multiLineLore));
         skull.setItemMeta(skullMeta);
         return skull;

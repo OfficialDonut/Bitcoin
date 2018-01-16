@@ -19,7 +19,7 @@ import java.util.*;
 class Mining implements Listener {
 
     private Bitcoin plugin;
-    private Util util;
+    private Messages messages;
     private BitcoinManager bitcoinManager;
     private ItemStack resetButton;
     private ItemStack solveButton;
@@ -36,18 +36,19 @@ class Mining implements Listener {
 
     Mining(Bitcoin pluginInstance) {
         plugin = pluginInstance;
-        util = plugin.getUtil();
+        Util util = plugin.getUtil();
         bitcoinManager = plugin.getBitcoinManager();
+        messages = plugin.getMessages();
 
         minReward = plugin.getBitcoinConfig().getInt("min_mining_reward");
         maxReward = plugin.getBitcoinConfig().getInt("max_mining_reward");
-        resetButton = util.createItemStack(Material.TNT, (short) 0, util.colorMessage("&4&lReset"), util.colorMessage("&cClick to reset the tiles"));
-        solveButton = util.createItemStack(Material.SLIME_BALL, (short) 0, util.colorMessage("&2&lSolve"), util.colorMessage("&aClick when you think you solved the puzzle"));
-        exitButton = util.createItemStack(Material.BARRIER, (short) 0, util.colorMessage("&4&lExit"), util.colorMessage("&cProgress will be saved~~&c(as long as you don't leave the server)"));
+        resetButton = util.createItemStack(Material.TNT, (short) 0, messages.getMessage("reset_item_name"), messages.getMessage("reset_item_lore"));
+        solveButton = util.createItemStack(Material.SLIME_BALL, (short) 0, messages.getMessage("solve_item_name"), messages.getMessage("solve_item_lore"));
+        exitButton = util.createItemStack(Material.BARRIER, (short) 0, messages.getMessage("exit_item_name"), messages.getMessage("exit_item_lore"));
         plainGlassPane = util.createItemStack(Material.THIN_GLASS, (short) 0, " ", null);
-        String[] glassNames = {util.colorMessage("&9&lWhite"), util.colorMessage("&9&lOrange"), util.colorMessage("&9&lMagenta"), util.colorMessage("&9&lLight Blue"), util.colorMessage("&9&lYellow"),
-                util.colorMessage("&9&lLime"), util.colorMessage("&9&lPink"), util.colorMessage("&9&lGray"), util.colorMessage("&9&lLight Gray"), util.colorMessage("&9&lCyan"), util.colorMessage("&9&lPurple"),
-                util.colorMessage("&9&lBlue"), util.colorMessage("&9&lBrown"), util.colorMessage("&9&lGreen"), util.colorMessage("&9&lRed"), util.colorMessage("&9&lBlack")};
+        String[] glassNames = {messages.getMessage("white_tile"), messages.getMessage("orange_tile"), messages.getMessage("magenta_tile"), messages.getMessage("light_blue_tile"), messages.getMessage("yellow_tile"),
+                messages.getMessage("lime_tile"), messages.getMessage("pink_tile"), messages.getMessage("gray_tile"), messages.getMessage("light_gray_tile"), messages.getMessage("cyan_tile"), messages.getMessage("purple_tile"),
+                messages.getMessage("blue_tile"), messages.getMessage("brown_tile"), messages.getMessage("green_tile"), messages.getMessage("red_tile"), messages.getMessage("black_tile")};
         for (short i = 0; i < 16; i++) { coloredGlass.add(util.createItemStack(Material.STAINED_GLASS_PANE, i, glassNames[i], null)); }
         generateNewPuzzle();
     }
@@ -57,7 +58,7 @@ class Mining implements Listener {
             if (!miningInterfaces.containsKey(player)) { createInterface(player); }
             player.openInventory(miningInterfaces.get(player));
         } else {
-            player.sendMessage(util.colorMessage("&cA puzzle is currently being generated."));
+            player.sendMessage(messages.getMessage("generating_puzzle"));
         }
     }
 
@@ -75,7 +76,7 @@ class Mining implements Listener {
                 if (randomizedSlots != null) {
                     int i = 0;
                     for (int slot : moveableSlots) { initialArrangement.put(slot, puzzleAnswer.get(randomizedSlots.get(i))); i++; }
-                    for (Player player : Bukkit.getOnlinePlayers()) { player.sendMessage(util.colorMessage("&aPuzzle generated, be the first player to solve it to earn bitcoins!")); }
+                    for (Player player : Bukkit.getOnlinePlayers()) { player.sendMessage(messages.getMessage("generated_puzzle")); }
                     cancel();
                 }
             }
@@ -105,7 +106,7 @@ class Mining implements Listener {
     }
 
     private void createInterface(Player player) {
-        Inventory miningInterface = Bukkit.createInventory(null, 54, util.colorMessage("&9&lBitcoin Mining"));
+        Inventory miningInterface = Bukkit.createInventory(null, 54, messages.getMessage("mining_menu_title"));
         miningInterface.setItem(48, resetButton);
         miningInterface.setItem(49, solveButton);
         miningInterface.setItem(50, exitButton);
@@ -118,7 +119,7 @@ class Mining implements Listener {
 
     private Boolean puzzleIsSolved(Inventory miningInterface) {
         for (int slot : moveableSlots) {
-            if (miningInterface.getItem(slot).getDurability() != puzzleAnswer.get(slot)) {
+            if (miningInterface.getItem(slot) == null || miningInterface.getItem(slot).getDurability() != puzzleAnswer.get(slot)) {
                 return false;
             }
         }
@@ -159,19 +160,19 @@ class Mining implements Listener {
     @EventHandler
     @SuppressWarnings("unused")
     public void onDragInGUI(InventoryDragEvent event) {
-        if (event.getInventory().getName() != null && event.getInventory().getName().equalsIgnoreCase(util.colorMessage("&9&lBitcoin Mining"))) { event.setCancelled(true); }
+        if (event.getInventory().getName() != null && event.getInventory().getName().equalsIgnoreCase(messages.getMessage("mining_menu_title"))) { event.setCancelled(true); }
     }
 
     @EventHandler
     @SuppressWarnings("unused")
     public void onMoveInGUI(InventoryMoveItemEvent event) {
-        if (event.getDestination().getName() != null && event.getDestination().getName().equalsIgnoreCase(util.colorMessage("&9&lBitcoin Mining"))) { event.setCancelled(true); }
+        if (event.getDestination().getName() != null && event.getDestination().getName().equalsIgnoreCase(messages.getMessage("mining_menu_title"))) { event.setCancelled(true); }
     }
 
     @EventHandler
     @SuppressWarnings("unused")
     public void onInventoryClick(InventoryClickEvent event) {
-        if (event.getInventory().getName().equalsIgnoreCase(util.colorMessage("&9&lBitcoin Mining"))) {
+        if (event.getInventory().getName().equalsIgnoreCase(messages.getMessage("mining_menu_title"))) {
             event.setCancelled(true);
             Player player = (Player) event.getWhoClicked();
             if (event.getSlot() == 48) {
@@ -184,16 +185,11 @@ class Mining implements Listener {
                     bitcoinManager.deposit(player, reward);
                     bitcoinManager.setPuzzlesSolved(player, bitcoinManager.getPuzzlesSolved(player) + 1);
                     bitcoinManager.setBitcoinsMined(player, bitcoinManager.getBitcoinsMined(player) + reward);
-                    player.sendMessage(" ");
-                    player.sendMessage(util.colorMessage("&aCongrats, you were rewarded " + reward + " bitcoins!"));
+                    player.sendMessage(messages.getMessage("reward").replace("{REWARD}", String.valueOf(reward)));
                     for (Player loopPlayer : Bukkit.getOnlinePlayers()) {
-                        if (loopPlayer.getOpenInventory().getTitle().equalsIgnoreCase(util.colorMessage("&9&lBitcoin Mining"))) { loopPlayer.closeInventory(); }
-                        loopPlayer.sendMessage(" ");
-                        loopPlayer.sendMessage(util.colorMessage("&9<<< Bitcoin Announcement >>>"));
-                        loopPlayer.sendMessage(util.colorMessage("&3Puzzle solved by: &b" + player.getName()));
-                        loopPlayer.sendMessage(util.colorMessage("&3Reward: &b" + reward + " bitcoins"));
-                        loopPlayer.sendMessage(" ");
-                        loopPlayer.sendMessage(util.colorMessage("&aGenerating new mining puzzle..."));
+                        if (loopPlayer.getOpenInventory().getTitle().equalsIgnoreCase(messages.getMessage("mining_menu_title"))) { loopPlayer.closeInventory(); }
+                        loopPlayer.sendMessage(messages.getMessage("solved").replace("{SOLVER}", player.getName()).replace("{REWARD}", String.valueOf(reward)));
+                        loopPlayer.sendMessage(messages.getMessage("generating_puzzle"));
                         loopPlayer.playSound(loopPlayer.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                     }
                     initialArrangement.clear();

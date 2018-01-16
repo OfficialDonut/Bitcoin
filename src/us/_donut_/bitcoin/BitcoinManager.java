@@ -20,6 +20,7 @@ class BitcoinManager implements Listener {
 
     private Bitcoin plugin;
     private Util util;
+    private Messages messages;
     private Map<Player, Integer> balances = new HashMap<>();
     private Map<Player, Integer> puzzlesSolved = new HashMap<>();
     private Map<Player, Integer> bitcoinsMined = new HashMap<>();
@@ -34,10 +35,12 @@ class BitcoinManager implements Listener {
     BitcoinManager(Bitcoin pluginInstance) {
         plugin = pluginInstance;
         util = plugin.getUtil();
+        messages = plugin.getMessages();
 
         bitcoinValue = plugin.getBitcoinConfig().getDouble("bitcoin_value");
         exchangeCurrencySymbol = plugin.getBitcoinConfig().getString("exchange_currency_symbol");
         world = Bukkit.getWorld(plugin.getBitcoinConfig().getString("world"));
+        if (world == null) { world = Bukkit.getWorlds().get(0); }
         minFluctuation = plugin.getBitcoinConfig().getDouble("min_bitcoin_value_fluctuation");
         maxFluctuation = plugin.getBitcoinConfig().getDouble("max_bitcoin_value_fluctuation");
         if (minFluctuation > maxFluctuation) {
@@ -121,7 +124,7 @@ class BitcoinManager implements Listener {
         new BukkitRunnable() {
             @Override
             public void run() {
-                if (world.getFullTime() % 24000 == 1) {
+                if (world.getTime() % 24000 == 1) {
                     Random random = new Random();
                     double fluctuation = util.round(minFluctuation + (random.nextDouble() * (maxFluctuation - minFluctuation)));
                     if (random.nextBoolean()) { fluctuation = fluctuation * -1; }
@@ -129,13 +132,10 @@ class BitcoinManager implements Listener {
                     plugin.getBitcoinConfig().set("bitcoin_value", bitcoinValue);
                     util.saveYml(plugin.getConfigFile(), plugin.getBitcoinConfig());
                     for (Player player : Bukkit.getOnlinePlayers()) {
-                        player.sendMessage(" ");
-                        player.sendMessage(util.colorMessage("&9<<< Daily Bitcoin Announcement >>>"));
-                        player.sendMessage(util.colorMessage("&3New bitcoin value: &b" + exchangeCurrencySymbol + bitcoinValue));
                         if (bitcoinValue > (bitcoinValue - fluctuation)) {
-                            player.sendMessage(util.colorMessage("&aValue has increased by: &2" + exchangeCurrencySymbol + fluctuation));
+                            player.sendMessage(messages.getMessage("value_increase").replace("{VALUE}", exchangeCurrencySymbol + bitcoinValue).replace("{CHANGE}", exchangeCurrencySymbol + (fluctuation)));
                         } else {
-                            player.sendMessage(util.colorMessage("&cValue has decreased by: &4" + exchangeCurrencySymbol + (fluctuation * -1)));
+                            player.sendMessage(messages.getMessage("value_decrease").replace("{VALUE}", exchangeCurrencySymbol + bitcoinValue).replace("{CHANGE}", exchangeCurrencySymbol + (fluctuation * -1)));
                         }
                         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                     }
