@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Class-Path: us._donut_.bitcoin.Bitcoin
+Main-Class: Bitcoin
+

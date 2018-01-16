@@ -1,0 +1,9 @@
+name: Bitcoin
+version: 1.0
+author: _Donut_
+main: us._donut_.bitcoin.Bitcoin
+depend: [Vault]
+commands:
+  bitcoin:
+    description: Opens bitcoin menu
+    usage: /bitcoin
