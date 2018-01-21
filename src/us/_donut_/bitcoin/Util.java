@@ -15,10 +15,7 @@ import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 class Util {
 
@@ -40,12 +37,17 @@ class Util {
     void loadConfigDefaults() {
         YamlConfiguration bitcoinConfig = plugin.getBitcoinConfig();
         if (!bitcoinConfig.contains("bitcoin_value")) { bitcoinConfig.set("bitcoin_value", 1000); }
+        if (!bitcoinConfig.contains("amount_in_bank")) { bitcoinConfig.set("amount_in_bank", 0); }
+        if (!bitcoinConfig.contains("bitcoin_display_rounding")) { bitcoinConfig.set("bitcoin_display_rounding", 5); }
+        if (!bitcoinConfig.contains("purchase_tax_percentage")) { bitcoinConfig.set("purchase_tax_percentage", 15); }
         if (!bitcoinConfig.contains("exchange_currency_symbol")) { bitcoinConfig.set("exchange_currency_symbol", "$"); }
         if (!bitcoinConfig.contains("min_bitcoin_value_fluctuation")) { bitcoinConfig.set("min_bitcoin_value_fluctuation", 0); }
         if (!bitcoinConfig.contains("max_bitcoin_value_fluctuation")) { bitcoinConfig.set("max_bitcoin_value_fluctuation", 100); }
+        if (!bitcoinConfig.contains("fluctuation_frequency")) { bitcoinConfig.set("fluctuation_frequency", 24000); }
         if (!bitcoinConfig.contains("min_mining_reward")) { bitcoinConfig.set("min_mining_reward", 10); }
         if (!bitcoinConfig.contains("max_mining_reward")) { bitcoinConfig.set("max_mining_reward", 50); }
         if (!bitcoinConfig.contains("main_world_name")) { bitcoinConfig.set("world", "world"); }
+        if (!bitcoinConfig.contains("use_playerpoints")) { bitcoinConfig.set("use_playerpoints", false); }
         saveYml(plugin.getConfigFile(), bitcoinConfig);
     }
 
@@ -91,9 +93,9 @@ class Util {
         return ChatColor.translateAlternateColorCodes('&', message);
     }
 
-    double round(double value) {
+    double round(int places, double value) {
         BigDecimal bd = new BigDecimal(value);
-        bd = bd.setScale(2, RoundingMode.HALF_UP);
+        bd = bd.setScale(places, RoundingMode.HALF_UP);
         return bd.doubleValue();
     }
 }

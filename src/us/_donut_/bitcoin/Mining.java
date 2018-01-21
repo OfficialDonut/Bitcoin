@@ -2,7 +2,6 @@ package us._donut_.bitcoin;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -19,7 +18,9 @@ import java.util.*;
 class Mining implements Listener {
 
     private Bitcoin plugin;
+    private Util util;
     private Messages messages;
+    private Sounds sounds;
     private BitcoinManager bitcoinManager;
     private ItemStack resetButton;
     private ItemStack solveButton;
@@ -36,10 +37,21 @@ class Mining implements Listener {
 
     Mining(Bitcoin pluginInstance) {
         plugin = pluginInstance;
-        Util util = plugin.getUtil();
+        util = plugin.getUtil();
         bitcoinManager = plugin.getBitcoinManager();
         messages = plugin.getMessages();
+        sounds = plugin.getSounds();
 
+        reload();
+        generateNewPuzzle();
+    }
+
+    void reload() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (player.getOpenInventory().getTitle().equalsIgnoreCase(messages.getMessage("mining_menu_title"))) { player.closeInventory(); }
+        }
+        miningInterfaces.clear();
+        coloredGlass.clear();
         minReward = plugin.getBitcoinConfig().getInt("min_mining_reward");
         maxReward = plugin.getBitcoinConfig().getInt("max_mining_reward");
         resetButton = util.createItemStack(Material.TNT, (short) 0, messages.getMessage("reset_item_name"), messages.getMessage("reset_item_lore"));
@@ -50,7 +62,6 @@ class Mining implements Listener {
                 messages.getMessage("lime_tile"), messages.getMessage("pink_tile"), messages.getMessage("gray_tile"), messages.getMessage("light_gray_tile"), messages.getMessage("cyan_tile"), messages.getMessage("purple_tile"),
                 messages.getMessage("blue_tile"), messages.getMessage("brown_tile"), messages.getMessage("green_tile"), messages.getMessage("red_tile"), messages.getMessage("black_tile")};
         for (short i = 0; i < 16; i++) { coloredGlass.add(util.createItemStack(Material.STAINED_GLASS_PANE, i, glassNames[i], null)); }
-        generateNewPuzzle();
     }
 
     void openInterface(Player player) {
@@ -176,31 +187,31 @@ class Mining implements Listener {
             event.setCancelled(true);
             Player player = (Player) event.getWhoClicked();
             if (event.getSlot() == 48) {
-                player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1, 1);
+                player.playSound(player.getLocation(), sounds.getSound("reset_tiles"), 1, 1);
                 for (int slot : moveableSlots) { event.getInventory().setItem(slot, coloredGlass.get(initialArrangement.get(slot))); }
                 event.getInventory().setItem(30, null);
             } else if (event.getSlot() == 49) {
                 if (puzzleIsSolved(event.getInventory())) {
                     int reward = minReward + (new Random().nextInt(maxReward - minReward + 1));
-                    bitcoinManager.deposit(player, reward);
-                    bitcoinManager.setPuzzlesSolved(player, bitcoinManager.getPuzzlesSolved(player) + 1);
-                    bitcoinManager.setBitcoinsMined(player, bitcoinManager.getBitcoinsMined(player) + reward);
+                    bitcoinManager.deposit(player.getUniqueId(), reward);
+                    bitcoinManager.setPuzzlesSolved(player.getUniqueId(), bitcoinManager.getPuzzlesSolved(player.getUniqueId()) + 1);
+                    bitcoinManager.setBitcoinsMined(player.getUniqueId(), bitcoinManager.getBitcoinsMined(player.getUniqueId()) + reward);
                     player.sendMessage(messages.getMessage("reward").replace("{REWARD}", String.valueOf(reward)));
                     for (Player loopPlayer : Bukkit.getOnlinePlayers()) {
                         if (loopPlayer.getOpenInventory().getTitle().equalsIgnoreCase(messages.getMessage("mining_menu_title"))) { loopPlayer.closeInventory(); }
                         loopPlayer.sendMessage(messages.getMessage("solved").replace("{SOLVER}", player.getName()).replace("{REWARD}", String.valueOf(reward)));
                         loopPlayer.sendMessage(messages.getMessage("generating_puzzle"));
-                        loopPlayer.playSound(loopPlayer.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
+                        loopPlayer.playSound(loopPlayer.getLocation(), sounds.getSound("puzzle_solved"), 1, 1);
                     }
                     initialArrangement.clear();
                     puzzleAnswer.clear();
                     miningInterfaces.clear();
                     generateNewPuzzle();
                 } else {
-                    player.playSound(player.getLocation(), Sound.ENTITY_BAT_TAKEOFF, 1, 1);
+                    player.playSound(player.getLocation(), sounds.getSound("click_solve_when_not_solved"), 1, 1);
                 }
             } else if (event.getSlot() == 50) {
-                player.playSound(player.getLocation(), Sound.ENTITY_BAT_TAKEOFF, 1, 1);
+                player.playSound(player.getLocation(), sounds.getSound("exit_mining"), 1, 1);
                 player.closeInventory();
             } else if (Arrays.asList(moveableSlots).contains(event.getSlot()) || event.getSlot() == 30) {
                 moveTile(event.getInventory(), event.getSlot());

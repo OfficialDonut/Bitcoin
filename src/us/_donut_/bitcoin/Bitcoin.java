@@ -1,8 +1,6 @@
 package us._donut_.bitcoin;
 
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -15,8 +13,9 @@ public class Bitcoin extends JavaPlugin {
     private BitcoinMenu bitcoinMenu;
     private File configFile;
     private YamlConfiguration bitcoinConfig;
-    private Economy economy;
+    private ServerEconomy economy;
     private Messages messages;
+    private Sounds sounds;
 
     @Override
     public void onEnable() {
@@ -28,10 +27,9 @@ public class Bitcoin extends JavaPlugin {
         if (new File(getDataFolder(), "Player Data").mkdirs()) { getLogger().info("Generated player data folder!"); }
         util.loadConfigDefaults();
 
-        RegisteredServiceProvider<Economy> economyProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
-        if (economyProvider != null) { economy = economyProvider.getProvider(); }
-
+        economy = new ServerEconomy(this);
         messages = new Messages(this);
+        sounds = new Sounds(this);
         getServer().getPluginManager().registerEvents(bitcoinManager = new BitcoinManager(this), this);
         getServer().getPluginManager().registerEvents(mining = new Mining(this), this);
         getServer().getPluginManager().registerEvents(bitcoinMenu = new BitcoinMenu(this), this);
@@ -47,12 +45,24 @@ public class Bitcoin extends JavaPlugin {
         getLogger().info("Disabled!");
     }
 
+    void reload() {
+        configFile = new File(getDataFolder(), "config.yml");
+        bitcoinConfig = YamlConfiguration.loadConfiguration(configFile);
+        messages.reload();
+        sounds.reload();
+        economy.reload();
+        bitcoinMenu.reload();
+        bitcoinManager.reload();
+        mining.reload();
+    }
+
     Util getUtil() { return util; }
     BitcoinManager getBitcoinManager() { return bitcoinManager; }
     Mining getMining() { return mining; }
     BitcoinMenu getBitcoinMenu() { return bitcoinMenu; }
-    Economy getEconomy() { return economy; }
+    ServerEconomy getEconomy() { return economy; }
     File getConfigFile() { return configFile; }
     YamlConfiguration getBitcoinConfig() { return bitcoinConfig; }
     Messages getMessages() { return messages; }
+    Sounds getSounds() { return sounds; }
 }

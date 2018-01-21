@@ -1,9 +1,74 @@
 name: Bitcoin
-version: 1.0.5
+version: 1.1.5
 author: _Donut_
 main: us._donut_.bitcoin.Bitcoin
 depend: [Vault]
+softdepend: [PlayerPoints]
 commands:
   bitcoin:
     description: Opens bitcoin menu
     usage: /bitcoin
+permissions:
+  bitcoin.*:
+    description: Gives access to all bitcoin commands
+    children:
+      bitcoin.main: true
+      bitcoin.help: true
+      bitcoin.value: true
+      bitcoin.bank: true
+      bitcoin.tax: true
+      bitcoin.mine: true
+      bitcoin.sell: true
+      bitcoin.buy: true
+      bitcoin.transfer: true
+      bitcoin.give: true
+      bitcoin.remove: true
+      bitcoin.set: true
+      bitcoin.reload: true
+      bitcoin.stats: true
+      bitcoin.top: true
+  bitcoin.main:
+    description: Allows /bitcoin
+    default: op
+  bitcoin.help:
+    description: Allows /bitcoin help
+    default: op
+  bitcoin.value:
+    description: Allows /bitcoin value
+    default: op
+  bitcoin.bank:
+    description: Allows /bitcoin bank
+    default: op
+  bitcoin.tax:
+    description: Allows /bitcoin tax
+    default: op
+  bitcoin.mine:
+    description: Allows /bitcoin mine
+    default: op
+  bitcoin.sell:
+    description: Allows /bitcoin sell
+    default: op
+  bitcoin.buy:
+    description: Allows /bitcoin buy
+    default: op
+  bitcoin.transfer:
+    description: Allows /bitcoin transfer
+    default: op
+  bitcoin.give:
+    description: Allows /bitcoin give
+    default: op
+  bitcoin.remove:
+    description: Allows /bitcoin remove
+    default: op
+  bitcoin.set:
+    description: Allows /bitcoin set
+    default: op
+  bitcoin.reload:
+    description: Allows /bitcoin reload
+    default: op
+  bitcoin.stats:
+    description: Allows /bitcoin stats
+    default: op
+  bitcoin.top:
+    description: Allows /bitcoin top
+    default: op
