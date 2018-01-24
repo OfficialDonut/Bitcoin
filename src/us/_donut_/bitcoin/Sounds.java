@@ -29,7 +29,7 @@ class Sounds {
             plugin.getLogger().info("Generated sounds.yml!");
         }
         loadDefaults();
-        loadAllMessages();
+        loadAllSounds();
     }
 
     Sound getSound(String sound) {
@@ -55,7 +55,7 @@ class Sounds {
         util.saveYml(soundsFile, soundsConfig);
     }
 
-    private void loadAllMessages() {
+    private void loadAllSounds() {
         for (String sound : soundsConfig.getKeys(false)) {
             sounds.put(sound, Sound.valueOf(soundsConfig.getString(sound)));
         }

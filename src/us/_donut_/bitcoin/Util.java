@@ -46,7 +46,8 @@ class Util {
         if (!bitcoinConfig.contains("fluctuation_frequency")) { bitcoinConfig.set("fluctuation_frequency", 24000); }
         if (!bitcoinConfig.contains("min_mining_reward")) { bitcoinConfig.set("min_mining_reward", 10); }
         if (!bitcoinConfig.contains("max_mining_reward")) { bitcoinConfig.set("max_mining_reward", 50); }
-        if (!bitcoinConfig.contains("main_world_name")) { bitcoinConfig.set("world", "world"); }
+        if (!bitcoinConfig.contains("circulation_limit")) { bitcoinConfig.set("circulation_limit", -1); }
+        if (!bitcoinConfig.contains("world")) { bitcoinConfig.set("world", "world"); }
         if (!bitcoinConfig.contains("use_playerpoints")) { bitcoinConfig.set("use_playerpoints", false); }
         saveYml(plugin.getConfigFile(), bitcoinConfig);
     }
@@ -71,12 +72,13 @@ class Util {
                     BufferedReader source = new BufferedReader(pageInput);
                     String sourceLine = source.readLine();
                     skullTextures.put(playerUUID, sourceLine.split("\"")[17]);
+                    UUID hashAsId = new UUID(skullTextures.get(playerUUID).hashCode(), skullTextures.get(playerUUID).hashCode());
+                    skull = Bukkit.getUnsafe().modifyItemStack(skull, "{SkullOwner:{Id:\"" + hashAsId + "\",Properties:{textures:[{Value:\"" + skullTextures.get(playerUUID) + "\"}]}}}");
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();
+                    skullMeta.setOwner(playerName);
                 }
             }
-            UUID hashAsId = new UUID(skullTextures.get(playerUUID).hashCode(), skullTextures.get(playerUUID).hashCode());
-            skull = Bukkit.getUnsafe().modifyItemStack(skull, "{SkullOwner:{Id:\"" + hashAsId + "\",Properties:{textures:[{Value:\"" + skullTextures.get(playerUUID) + "\"}]}}}");
         } else {
             SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();
             skullMeta.setOwner(playerName);

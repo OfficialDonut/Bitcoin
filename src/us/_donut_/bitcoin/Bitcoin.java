@@ -36,7 +36,7 @@ public class Bitcoin extends JavaPlugin {
         BitcoinCommand bitcoinCommand;
         getServer().getPluginManager().registerEvents(bitcoinCommand = new BitcoinCommand(this), this);
         getCommand("bitcoin").setExecutor(bitcoinCommand);
-
+        if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) { new Placeholders(this).hook(); }
         getLogger().info("Enabled!");
     }
 

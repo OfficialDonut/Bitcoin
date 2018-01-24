@@ -86,7 +86,13 @@ class BitcoinCommand implements CommandExecutor, Listener {
                 if (sender instanceof ConsoleCommandSender) { sender.sendMessage(messages.getMessage("cannot_use_from_console")); return true; }
                 Player player = (Player) sender;
                 if (!player.hasPermission("bitcoin.stats")) { player.sendMessage(messages.getMessage("no_permission")); return true; }
-                player.sendMessage(messages.getMessage("statistic_item_lore").replace("{BALANCE}", String.valueOf(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBalance(player.getUniqueId())))).replace("{AMOUNT_SOLVED}", String.valueOf(bitcoinManager.getPuzzlesSolved(player.getUniqueId()))).replace("{AMOUNT_MINED}", String.valueOf(bitcoinManager.getBitcoinsMined(player.getUniqueId()))));
+                if (args.length == 1) {
+                    player.sendMessage(messages.getMessage("statistic_item_lore").replace("{BALANCE}", String.valueOf(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBalance(player.getUniqueId())))).replace("{AMOUNT_SOLVED}", String.valueOf(bitcoinManager.getPuzzlesSolved(player.getUniqueId()))).replace("{AMOUNT_MINED}", String.valueOf(bitcoinManager.getBitcoinsMined(player.getUniqueId()))));
+                } else {
+                    OfflinePlayer statPlayer = Bukkit.getOfflinePlayer(args[1]);
+                    if (!bitcoinManager.getPlayerFileConfigs().containsKey(statPlayer.getUniqueId())) { sender.sendMessage(messages.getMessage("never_joined").replace("{PLAYER}", args[1])); return true; }
+                    player.sendMessage(messages.getMessage("statistic_item_lore").replace("{BALANCE}", String.valueOf(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBalance(statPlayer.getUniqueId())))).replace("{AMOUNT_SOLVED}", String.valueOf(bitcoinManager.getPuzzlesSolved(statPlayer.getUniqueId()))).replace("{AMOUNT_MINED}", String.valueOf(bitcoinManager.getBitcoinsMined(statPlayer.getUniqueId()))));
+                }
             }
 
             else if (args[0].equalsIgnoreCase("sell")) {
@@ -158,6 +164,7 @@ class BitcoinCommand implements CommandExecutor, Listener {
                 try {
                     double giveAmount = Double.valueOf(args[2]);
                     if (giveAmount <= 0) { sender.sendMessage(messages.getMessage("invalid_number")); return true; }
+                    if (bitcoinManager.getCirculationLimit() > 0 && bitcoinManager.getBitcoinsInCirculation() + giveAmount >= bitcoinManager.getCirculationLimit()) { sender.sendMessage(messages.getMessage("exceeds_limit").replace("{LIMIT}", String.valueOf(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getCirculationLimit())))); return true; }
                     bitcoinManager.deposit(recipient.getUniqueId(), giveAmount);
                     sender.sendMessage(messages.getMessage("give_command").replace("{AMOUNT}", String.valueOf(giveAmount)).replace("{PLAYER}", recipient.getName()));
                 } catch (NumberFormatException e) {
@@ -189,6 +196,7 @@ class BitcoinCommand implements CommandExecutor, Listener {
                 try {
                     double newBalance = Double.valueOf(args[2]);
                     if (newBalance < 0) { sender.sendMessage(messages.getMessage("invalid_number")); return true; }
+                    if (bitcoinManager.getCirculationLimit() > 0 && bitcoinManager.getBitcoinsInCirculation() + (newBalance - bitcoinManager.getBalance(recipient.getUniqueId())) >= bitcoinManager.getCirculationLimit()) { sender.sendMessage(messages.getMessage("exceeds_limit").replace("{LIMIT}", String.valueOf(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getCirculationLimit())))); return true; }
                     bitcoinManager.setBalance(recipient.getUniqueId(), newBalance);
                     sender.sendMessage(messages.getMessage("set_command").replace("{AMOUNT}", String.valueOf(newBalance)).replace("{PLAYER}", recipient.getName()));
                 } catch (NumberFormatException e) {
@@ -226,6 +234,15 @@ class BitcoinCommand implements CommandExecutor, Listener {
             else if (args[0].equalsIgnoreCase("tax")) {
                 if (!sender.hasPermission("bitcoin.tax")) { sender.sendMessage(messages.getMessage("no_permission")); return true; }
                 sender.sendMessage(messages.getMessage("tax_command").replace("{TAX}", bitcoinManager.getPurchaseTaxPercentage() + "%"));
+            }
+
+            else if (args[0].equalsIgnoreCase("circulation")) {
+                if (!sender.hasPermission("bitcoin.circulation")) { sender.sendMessage(messages.getMessage("no_permission")); return true; }
+                if (bitcoinManager.getCirculationLimit() > 0) {
+                    sender.sendMessage(messages.getMessage("circulation_command").replace("{AMOUNT}", String.valueOf(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBitcoinsInCirculation()))).replace("{LIMIT}", String.valueOf(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getCirculationLimit()))));
+                } else {
+                    sender.sendMessage(messages.getMessage("circulation_command").replace("{AMOUNT}", String.valueOf(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBitcoinsInCirculation()))).replace("{LIMIT}", "none"));
+                }
             }
 
             else {

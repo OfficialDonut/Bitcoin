@@ -1,9 +1,9 @@
 name: Bitcoin
-version: 1.1.5
+version: 1.2
 author: _Donut_
 main: us._donut_.bitcoin.Bitcoin
 depend: [Vault]
-softdepend: [PlayerPoints]
+softdepend: [PlayerPoints, PlaceholderAPI]
 commands:
   bitcoin:
     description: Opens bitcoin menu
@@ -27,6 +27,11 @@ permissions:
       bitcoin.reload: true
       bitcoin.stats: true
       bitcoin.top: true
+      bitcoin.circulation: true
+      bitcoin.gui.transfer: true
+      bitcoin.gui.buy: true
+      bitcoin.gui.sell: true
+      bitcoin.gui.mine: true
   bitcoin.main:
     description: Allows /bitcoin
     default: op
@@ -71,4 +76,19 @@ permissions:
     default: op
   bitcoin.top:
     description: Allows /bitcoin top
+    default: op
+  bitcoin.circulation:
+    description: Allows /bitcoin circulation
+    default: op
+  bitcoin.gui.transfer:
+    description: Allows transferring from GUI
+    default: op
+  bitcoin.gui.buy:
+    description: Allows buying from GUI
+    default: op
+  bitcoin.gui.sell:
+    description: Allows selling from GUI
+    default: op
+  bitcoin.gui.mine:
+    description: Allows mining from GUI
     default: op

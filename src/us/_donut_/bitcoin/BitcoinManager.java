@@ -23,13 +23,14 @@ class BitcoinManager implements Listener {
     private Sounds sounds;
     private Map<UUID, Double> balances = new HashMap<>();
     private Map<UUID, Integer> puzzlesSolved = new HashMap<>();
-    private Map<UUID, Integer> bitcoinsMined = new HashMap<>();
+    private Map<UUID, Double> bitcoinsMined = new HashMap<>();
     private Map<UUID, File> playerFiles = new HashMap<>();
     private Map<UUID, YamlConfiguration> playerFileConfigs = new HashMap<>();
     private double bitcoinValue;
     private int displayRoundAmount;
     private double minFluctuation;
     private double maxFluctuation;
+    private double circulationLimit;
     private String exchangeCurrencySymbol;
     private World world;
     private Double amountInBank;
@@ -58,6 +59,7 @@ class BitcoinManager implements Listener {
         bitcoinValue = plugin.getBitcoinConfig().getDouble("bitcoin_value");
         displayRoundAmount = plugin.getBitcoinConfig().getInt("bitcoin_display_rounding");
         exchangeCurrencySymbol = plugin.getBitcoinConfig().getString("exchange_currency_symbol");
+        circulationLimit = plugin.getBitcoinConfig().getDouble("circulation_limit");
         world = Bukkit.getWorld(plugin.getBitcoinConfig().getString("world"));
         if (world == null) { world = Bukkit.getWorlds().get(0); }
         customFrequency = plugin.getBitcoinConfig().getLong("fluctuation_frequency");
@@ -76,7 +78,7 @@ class BitcoinManager implements Listener {
                 playerFileConfigs.put(playerUUID, config);
                 balances.put(playerUUID, config.getDouble("balance"));
                 puzzlesSolved.put(playerUUID, config.getInt("puzzles_solved"));
-                bitcoinsMined.put(playerUUID, config.getInt("bitcoins_mined"));
+                bitcoinsMined.put(playerUUID, config.getDouble("bitcoins_mined"));
             }
         }
         if (newDayChecker != null) { newDayChecker.cancel(); }
@@ -93,11 +95,20 @@ class BitcoinManager implements Listener {
     Double getPurchaseTaxPercentage() { return purchaseTaxPercentage; }
     Double getBalance(UUID playerUUID) { return balances.get(playerUUID); }
     Integer getPuzzlesSolved(UUID playerUUID) { return puzzlesSolved.get(playerUUID); }
-    Integer getBitcoinsMined(UUID playerUUID) { return bitcoinsMined.get(playerUUID); }
+    Double getBitcoinsMined(UUID playerUUID) { return bitcoinsMined.get(playerUUID); }
     Double getBitcoinValue() { return bitcoinValue; }
     Integer getDisplayRoundAmount() { return displayRoundAmount; }
-
+    Double getCirculationLimit() { return circulationLimit; }
     String getExchangeCurrencySymbol() { return exchangeCurrencySymbol; }
+
+    Double getBitcoinsInCirculation() {
+        double bitcoins = 0;
+        for (double balance : balances.values()) {
+            bitcoins += balance;
+        }
+        bitcoins += amountInBank;
+        return bitcoins;
+    }
 
     List<OfflinePlayer> getTopPlayers() {
         Map<UUID, Double> sortedBalances = balances.entrySet().stream().sorted(Map.Entry.comparingByValue(Collections.reverseOrder())).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
@@ -126,15 +137,15 @@ class BitcoinManager implements Listener {
         util.saveYml(playerFiles.get(playerUUID), playerFileConfigs.get(playerUUID));
     }
 
-    void setPuzzlesSolved(UUID playerUUID, int balance) {
-        puzzlesSolved.put(playerUUID, balance);
-        playerFileConfigs.get(playerUUID).set("puzzles_solved", balance);
+    void setPuzzlesSolved(UUID playerUUID, int amount) {
+        puzzlesSolved.put(playerUUID, amount);
+        playerFileConfigs.get(playerUUID).set("puzzles_solved", amount);
         util.saveYml(playerFiles.get(playerUUID), playerFileConfigs.get(playerUUID));
     }
 
-    void setBitcoinsMined(UUID playerUUID, int balance) {
-        bitcoinsMined.put(playerUUID, balance);
-        playerFileConfigs.get(playerUUID).set("bitcoins_mined", balance);
+    void setBitcoinsMined(UUID playerUUID, double amount) {
+        bitcoinsMined.put(playerUUID, amount);
+        playerFileConfigs.get(playerUUID).set("bitcoins_mined", bitcoinsMined.get(playerUUID));
         util.saveYml(playerFiles.get(playerUUID), playerFileConfigs.get(playerUUID));
     }
 
@@ -169,7 +180,12 @@ class BitcoinManager implements Listener {
         Random random = new Random();
         double fluctuation = util.round(2, minFluctuation + (random.nextDouble() * (maxFluctuation - minFluctuation)));
         if (random.nextBoolean()) { fluctuation = fluctuation * -1; }
-        bitcoinValue = util.round(2, bitcoinValue + fluctuation);
+        if (bitcoinValue + fluctuation < 0) {
+            fluctuation = Math.abs(bitcoinValue);
+            bitcoinValue = 0;
+        } else {
+            bitcoinValue = util.round(2, bitcoinValue + fluctuation);
+        }
         plugin.getBitcoinConfig().set("bitcoin_value", bitcoinValue);
         util.saveYml(plugin.getConfigFile(), plugin.getBitcoinConfig());
         for (Player player : Bukkit.getOnlinePlayers()) {

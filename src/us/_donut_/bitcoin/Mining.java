@@ -34,6 +34,7 @@ class Mining implements Listener {
     private Map<Integer, Short> initialArrangement = new HashMap<>();
     private int minReward;
     private int maxReward;
+    private double reward;
 
     Mining(Bitcoin pluginInstance) {
         plugin = pluginInstance;
@@ -192,7 +193,18 @@ class Mining implements Listener {
                 event.getInventory().setItem(30, null);
             } else if (event.getSlot() == 49) {
                 if (puzzleIsSolved(event.getInventory())) {
-                    int reward = minReward + (new Random().nextInt(maxReward - minReward + 1));
+                    reward = minReward + (new Random().nextInt(maxReward - minReward + 1));
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            if (bitcoinManager.getBitcoinsInCirculation() >= bitcoinManager.getCirculationLimit()) { reward = 0; cancel(); }
+                            if (bitcoinManager.getCirculationLimit() > 0 && bitcoinManager.getBitcoinsInCirculation() + reward >= bitcoinManager.getCirculationLimit()) {
+                                reward = reward / 2.0;
+                            } else {
+                                cancel();
+                            }
+                        }
+                    }.runTaskTimer(plugin, 0, 1);
                     bitcoinManager.deposit(player.getUniqueId(), reward);
                     bitcoinManager.setPuzzlesSolved(player.getUniqueId(), bitcoinManager.getPuzzlesSolved(player.getUniqueId()) + 1);
                     bitcoinManager.setBitcoinsMined(player.getUniqueId(), bitcoinManager.getBitcoinsMined(player.getUniqueId()) + reward);

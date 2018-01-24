@@ -135,12 +135,14 @@ class BitcoinMenu implements Listener {
             event.setCancelled(true);
             Player player = (Player) event.getWhoClicked();
             if (event.getSlot() == 12) {
+                if (!player.hasPermission("bitcoin.gui.transfer")) { player.sendMessage(messages.getMessage("no_permission")); }
                 player.closeInventory();
                 player.playSound(player.getLocation(), sounds.getSound("click_transfer_item"), 1, 1);
                 playersTransferring.add(player);
                 player.sendMessage(messages.getMessage("begin_transfer").replace("{BALANCE}", String.valueOf(bitcoinManager.getBalance(player.getUniqueId()))));
                 sendCancelButton(player);
             } else if (event.getSlot() == 13) {
+                if (!player.hasPermission("bitcoin.gui.buy")) { player.sendMessage(messages.getMessage("no_permission")); }
                 if (!plugin.getEconomy().hasEconomy()) {
                     player.playSound(player.getLocation(), sounds.getSound("no_economy"), 1, 1);
                     player.sendMessage(messages.getMessage("no_economy"));
@@ -152,6 +154,7 @@ class BitcoinMenu implements Listener {
                     sendCancelButton(player);
                 }
             } else if (event.getSlot() == 14) {
+                if (!player.hasPermission("bitcoin.gui.sell")) { player.sendMessage(messages.getMessage("no_permission")); }
                 player.closeInventory();
                 if (!plugin.getEconomy().hasEconomy()) {
                     player.playSound(player.getLocation(), sounds.getSound("no_economy"), 1, 1);
@@ -163,6 +166,7 @@ class BitcoinMenu implements Listener {
                     sendCancelButton(player);
                 }
             } else if (event.getSlot() == 15) {
+                if (!player.hasPermission("bitcoin.gui.mine")) { player.sendMessage(messages.getMessage("no_permission")); }
                 player.playSound(player.getLocation(), sounds.getSound("click_mining_item"), 1, 1);
                 plugin.getMining().openInterface(player);
             }
