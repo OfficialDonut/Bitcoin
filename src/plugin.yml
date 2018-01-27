@@ -1,9 +1,9 @@
 name: Bitcoin
-version: 1.2
+version: 1.2.5
 author: _Donut_
 main: us._donut_.bitcoin.Bitcoin
 depend: [Vault]
-softdepend: [PlayerPoints, PlaceholderAPI]
+softdepend: [PlayerPoints, PlaceholderAPI, MVdWPlaceholderAPI]
 commands:
   bitcoin:
     description: Opens bitcoin menu

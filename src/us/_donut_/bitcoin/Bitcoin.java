@@ -16,6 +16,7 @@ public class Bitcoin extends JavaPlugin {
     private ServerEconomy economy;
     private Messages messages;
     private Sounds sounds;
+    private static BitcoinAPI api;
 
     @Override
     public void onEnable() {
@@ -36,7 +37,9 @@ public class Bitcoin extends JavaPlugin {
         BitcoinCommand bitcoinCommand;
         getServer().getPluginManager().registerEvents(bitcoinCommand = new BitcoinCommand(this), this);
         getCommand("bitcoin").setExecutor(bitcoinCommand);
-        if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) { new Placeholders(this).hook(); }
+        if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) { new RegisterPlaceholderAPI(this).hook(); }
+        if (getServer().getPluginManager().isPluginEnabled("MVdWPlaceholderAPI")) { new RegisterMVdWPlaceholderAPI(this); }
+        api = new BitcoinAPI(this);
         getLogger().info("Enabled!");
     }
 
@@ -65,4 +68,6 @@ public class Bitcoin extends JavaPlugin {
     YamlConfiguration getBitcoinConfig() { return bitcoinConfig; }
     Messages getMessages() { return messages; }
     Sounds getSounds() { return sounds; }
+
+    public static BitcoinAPI getAPI() { return api; }
 }

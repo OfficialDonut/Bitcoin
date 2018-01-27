@@ -176,7 +176,7 @@ class BitcoinManager implements Listener {
         if (!playerFileConfig.contains("bitcoins_mined")) { setBitcoinsMined(event.getPlayer().getUniqueId(), 0); }
     }
 
-    private void fluctuate() {
+    void fluctuate() {
         Random random = new Random();
         double fluctuation = util.round(2, minFluctuation + (random.nextDouble() * (maxFluctuation - minFluctuation)));
         if (random.nextBoolean()) { fluctuation = fluctuation * -1; }

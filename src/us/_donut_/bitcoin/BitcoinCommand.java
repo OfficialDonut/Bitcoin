@@ -87,11 +87,11 @@ class BitcoinCommand implements CommandExecutor, Listener {
                 Player player = (Player) sender;
                 if (!player.hasPermission("bitcoin.stats")) { player.sendMessage(messages.getMessage("no_permission")); return true; }
                 if (args.length == 1) {
-                    player.sendMessage(messages.getMessage("statistic_item_lore").replace("{BALANCE}", String.valueOf(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBalance(player.getUniqueId())))).replace("{AMOUNT_SOLVED}", String.valueOf(bitcoinManager.getPuzzlesSolved(player.getUniqueId()))).replace("{AMOUNT_MINED}", String.valueOf(bitcoinManager.getBitcoinsMined(player.getUniqueId()))));
+                    player.sendMessage(messages.getMessage("statistic_command_self").replace("{BALANCE}", String.valueOf(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBalance(player.getUniqueId())))).replace("{AMOUNT_SOLVED}", String.valueOf(bitcoinManager.getPuzzlesSolved(player.getUniqueId()))).replace("{AMOUNT_MINED}", String.valueOf(bitcoinManager.getBitcoinsMined(player.getUniqueId()))));
                 } else {
                     OfflinePlayer statPlayer = Bukkit.getOfflinePlayer(args[1]);
                     if (!bitcoinManager.getPlayerFileConfigs().containsKey(statPlayer.getUniqueId())) { sender.sendMessage(messages.getMessage("never_joined").replace("{PLAYER}", args[1])); return true; }
-                    player.sendMessage(messages.getMessage("statistic_item_lore").replace("{BALANCE}", String.valueOf(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBalance(statPlayer.getUniqueId())))).replace("{AMOUNT_SOLVED}", String.valueOf(bitcoinManager.getPuzzlesSolved(statPlayer.getUniqueId()))).replace("{AMOUNT_MINED}", String.valueOf(bitcoinManager.getBitcoinsMined(statPlayer.getUniqueId()))));
+                    player.sendMessage(messages.getMessage("statistic_command_other").replace("{PLAYER}", statPlayer.getName()).replace("{BALANCE}", String.valueOf(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBalance(statPlayer.getUniqueId())))).replace("{AMOUNT_SOLVED}", String.valueOf(bitcoinManager.getPuzzlesSolved(statPlayer.getUniqueId()))).replace("{AMOUNT_MINED}", String.valueOf(bitcoinManager.getBitcoinsMined(statPlayer.getUniqueId()))));
                 }
             }
 
