@@ -32,8 +32,8 @@ class Mining implements Listener {
     private Map<Player, Inventory> miningInterfaces = new HashMap<>();
     private Map<Integer, Short> puzzleAnswer = new HashMap<>();
     private Map<Integer, Short> initialArrangement = new HashMap<>();
-    private int minReward;
-    private int maxReward;
+    private double minReward;
+    private double maxReward;
     private double reward;
 
     Mining(Bitcoin pluginInstance) {
@@ -53,8 +53,8 @@ class Mining implements Listener {
         }
         miningInterfaces.clear();
         coloredGlass.clear();
-        minReward = plugin.getBitcoinConfig().getInt("min_mining_reward");
-        maxReward = plugin.getBitcoinConfig().getInt("max_mining_reward");
+        minReward = plugin.getBitcoinConfig().getDouble("min_mining_reward");
+        maxReward = plugin.getBitcoinConfig().getDouble("max_mining_reward");
         resetButton = util.createItemStack(Material.TNT, (short) 0, messages.getMessage("reset_item_name"), messages.getMessage("reset_item_lore"));
         solveButton = util.createItemStack(Material.SLIME_BALL, (short) 0, messages.getMessage("solve_item_name"), messages.getMessage("solve_item_lore"));
         exitButton = util.createItemStack(Material.BARRIER, (short) 0, messages.getMessage("exit_item_name"), messages.getMessage("exit_item_lore"));
@@ -193,7 +193,7 @@ class Mining implements Listener {
                 event.getInventory().setItem(30, null);
             } else if (event.getSlot() == 49) {
                 if (puzzleIsSolved(event.getInventory())) {
-                    reward = minReward + (new Random().nextInt(maxReward - minReward + 1));
+                    reward = util.round(2, minReward + (maxReward - minReward) * new Random().nextDouble());
                     new BukkitRunnable() {
                         @Override
                         public void run() {

@@ -35,9 +35,8 @@ class BitcoinManager implements Listener {
     private World world;
     private Double amountInBank;
     private Double purchaseTaxPercentage;
-    private BukkitTask newDayChecker;
-    private BukkitTask customFrequencyChecker;
-    private long customFrequency;
+    private BukkitTask timeChecker;
+    private BukkitTask frequencyChecker;
 
     BitcoinManager(Bitcoin pluginInstance) {
         plugin = pluginInstance;
@@ -62,7 +61,6 @@ class BitcoinManager implements Listener {
         circulationLimit = plugin.getBitcoinConfig().getDouble("circulation_limit");
         world = Bukkit.getWorld(plugin.getBitcoinConfig().getString("world"));
         if (world == null) { world = Bukkit.getWorlds().get(0); }
-        customFrequency = plugin.getBitcoinConfig().getLong("fluctuation_frequency");
         minFluctuation = plugin.getBitcoinConfig().getDouble("min_bitcoin_value_fluctuation");
         maxFluctuation = plugin.getBitcoinConfig().getDouble("max_bitcoin_value_fluctuation");
         if (minFluctuation > maxFluctuation) {
@@ -81,12 +79,22 @@ class BitcoinManager implements Listener {
                 bitcoinsMined.put(playerUUID, config.getDouble("bitcoins_mined"));
             }
         }
-        if (newDayChecker != null) { newDayChecker.cancel(); }
-        if (customFrequencyChecker != null) { customFrequencyChecker.cancel(); }
-        if (customFrequency == 24000L) {
-            newDayChecker();
+
+        if (timeChecker != null) { timeChecker.cancel(); }
+        if (frequencyChecker != null) { frequencyChecker.cancel(); }
+        String frequencyString = plugin.getBitcoinConfig().getString("fluctuation_frequency");
+        if (frequencyString.contains(":")) {
+            Long timeInTicks = util.getTicksFromTime(frequencyString);
+            if (timeInTicks == null) { timeInTicks = 1L; }
+            runTimeChecker(timeInTicks);
         } else {
-            customFrequencyChecker();
+            long frequency;
+            try {
+                frequency = Long.valueOf(frequencyString);
+            } catch (NumberFormatException e) {
+                frequency = 24000L;
+            }
+            runFrequencyChecker(frequency);
         }
     }
 
@@ -198,26 +206,40 @@ class BitcoinManager implements Listener {
         }
     }
 
-    private void newDayChecker() {
-        newDayChecker = new BukkitRunnable() {
+    private void runTimeChecker(long timeInTicks) {
+        timeChecker = new BukkitRunnable() {
+            Boolean alreadyFluctuated = false;
             @Override
             public void run() {
-                if (world.getTime() % 24000 == 1) {
-                    fluctuate();
+                if (world.getTime() % 24000 == timeInTicks) {
+                    if (!alreadyFluctuated) {
+                        fluctuate();
+                        alreadyFluctuated = true;
+                    }
+                }
+                if (alreadyFluctuated && world.getTime() % 24000 != timeInTicks) {
+                    alreadyFluctuated = false;
                 }
             }
         }.runTaskTimer(plugin, 0, 1);
     }
 
-    private void customFrequencyChecker() {
-        customFrequencyChecker = new BukkitRunnable() {
+    private void runFrequencyChecker(long frequency) {
+        frequencyChecker = new BukkitRunnable() {
             long timeSinceLastFluctuation = 0L;
+            Boolean alreadyFluctuated = false;
             @Override
             public void run() {
                 timeSinceLastFluctuation++;
-                if (timeSinceLastFluctuation == customFrequency) {
-                    fluctuate();
-                    timeSinceLastFluctuation = 0;
+                if (timeSinceLastFluctuation == frequency) {
+                    if (!alreadyFluctuated) {
+                        fluctuate();
+                        timeSinceLastFluctuation = 0;
+                        alreadyFluctuated = true;
+                    }
+                }
+                if (alreadyFluctuated && timeSinceLastFluctuation != frequency) {
+                    alreadyFluctuated = false;
                 }
             }
         }.runTaskTimer(plugin, 0, 1);
