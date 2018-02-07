@@ -100,7 +100,7 @@ class BitcoinCommand implements CommandExecutor, Listener {
                 Player player = (Player) sender;
                 if (!player.hasPermission("bitcoin.sell")) { player.sendMessage(messages.getMessage("no_permission")); return true; }
                 if (!plugin.getEconomy().hasEconomy()) { player.sendMessage(messages.getMessage("no_economy")); }
-                if (args.length < 2) { player.sendMessage(messages.getMessage("invalid_command")); return true; }
+                if (args.length < 2) { player.sendMessage(messages.getMessage("sell_command_invalid_arg")); return true; }
                 try {
                     double exchangeAmount = Double.valueOf(args[1]);
                     if (exchangeAmount > bitcoinManager.getBalance(player.getUniqueId())) { player.sendMessage(messages.getMessage("not_enough_bitcoins").replace("{BALANCE}", String.valueOf(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBalance(player.getUniqueId()))))); return true; }
@@ -118,7 +118,7 @@ class BitcoinCommand implements CommandExecutor, Listener {
                 if (sender instanceof ConsoleCommandSender) { sender.sendMessage(messages.getMessage("cannot_use_from_console")); return true; }
                 Player player = (Player) sender;
                 if (!player.hasPermission("bitcoin.transfer")) { player.sendMessage(messages.getMessage("no_permission")); return true; }
-                if (args.length < 3) { player.sendMessage(messages.getMessage("invalid_command")); return true; }
+                if (args.length < 3) { player.sendMessage(messages.getMessage("transfer_command_invalid_arg")); return true; }
                 Player recipient = Bukkit.getPlayer(args[1]);
                 if (recipient == null) { player.sendMessage(messages.getMessage("not_online").replace("{PLAYER}", args[1])); return true; }
                 if (recipient.equals(player)) { player.sendMessage(messages.getMessage("cannot_transfer_to_self")); return true; }
@@ -140,7 +140,7 @@ class BitcoinCommand implements CommandExecutor, Listener {
                 Player player = (Player) sender;
                 if (!player.hasPermission("bitcoin.buy")) { player.sendMessage(messages.getMessage("no_permission")); return true; }
                 if (!plugin.getEconomy().hasEconomy()) { player.sendMessage(messages.getMessage("no_economy")); }
-                if (args.length < 2) { player.sendMessage(messages.getMessage("invalid_command")); return true; }
+                if (args.length < 2) { player.sendMessage(messages.getMessage("buy_command_invalid_arg")); return true; }
                 try {
                     double buyAmount = Double.valueOf(args[1]);
                     if (buyAmount > bitcoinManager.getAmountInBank()) { player.sendMessage(messages.getMessage("not_enough_in_bank").replace("{AMOUNT}", String.valueOf(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getAmountInBank())))); return true; }
@@ -158,7 +158,7 @@ class BitcoinCommand implements CommandExecutor, Listener {
 
             else if (args[0].equalsIgnoreCase("give")) {
                 if (!sender.hasPermission("bitcoin.give")) { sender.sendMessage(messages.getMessage("no_permission")); return true; }
-                if (args.length < 3) { sender.sendMessage(messages.getMessage("invalid_command")); return true; }
+                if (args.length < 3) { sender.sendMessage(messages.getMessage("give_command_invalid_arg")); return true; }
                 OfflinePlayer recipient = Bukkit.getOfflinePlayer(args[1]);
                 if (!bitcoinManager.getPlayerFileConfigs().containsKey(recipient.getUniqueId())) { sender.sendMessage(messages.getMessage("never_joined").replace("{PLAYER}", args[1])); return true; }
                 try {
@@ -174,7 +174,7 @@ class BitcoinCommand implements CommandExecutor, Listener {
 
             else if (args[0].equalsIgnoreCase("remove")) {
                 if (!sender.hasPermission("bitcoin.remove")) { sender.sendMessage(messages.getMessage("no_permission")); return true; }
-                if (args.length < 3) { sender.sendMessage(messages.getMessage("invalid_command")); return true; }
+                if (args.length < 3) { sender.sendMessage(messages.getMessage("remove_command_invalid_arg")); return true; }
                 OfflinePlayer recipient = Bukkit.getOfflinePlayer(args[1]);
                 if (!bitcoinManager.getPlayerFileConfigs().containsKey(recipient.getUniqueId())) { sender.sendMessage(messages.getMessage("never_joined").replace("{PLAYER}", args[1])); return true; }
                 try {
@@ -190,7 +190,7 @@ class BitcoinCommand implements CommandExecutor, Listener {
 
             else if (args[0].equalsIgnoreCase("set")) {
                 if (!sender.hasPermission("bitcoin.set")) { sender.sendMessage(messages.getMessage("no_permission")); return true; }
-                if (args.length < 3) { sender.sendMessage(messages.getMessage("invalid_command")); return true; }
+                if (args.length < 3) { sender.sendMessage(messages.getMessage("set_command_invalid_arg")); return true; }
                 OfflinePlayer recipient = Bukkit.getOfflinePlayer(args[1]);
                 if (!bitcoinManager.getPlayerFileConfigs().containsKey(recipient.getUniqueId())) { sender.sendMessage(messages.getMessage("never_joined").replace("{PLAYER}", args[1])); return true; }
                 try {

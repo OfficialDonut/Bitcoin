@@ -35,6 +35,7 @@ class Mining implements Listener {
     private double minReward;
     private double maxReward;
     private double reward;
+    private long newPuzzleDelay;
 
     Mining(Bitcoin pluginInstance) {
         plugin = pluginInstance;
@@ -55,6 +56,7 @@ class Mining implements Listener {
         coloredGlass.clear();
         minReward = plugin.getBitcoinConfig().getDouble("min_mining_reward");
         maxReward = plugin.getBitcoinConfig().getDouble("max_mining_reward");
+        newPuzzleDelay = plugin.getBitcoinConfig().getLong("new_mining_puzzle_delay");
         resetButton = util.createItemStack(Material.TNT, (short) 0, messages.getMessage("reset_item_name"), messages.getMessage("reset_item_lore"));
         solveButton = util.createItemStack(Material.SLIME_BALL, (short) 0, messages.getMessage("solve_item_name"), messages.getMessage("solve_item_lore"));
         exitButton = util.createItemStack(Material.BARRIER, (short) 0, messages.getMessage("exit_item_name"), messages.getMessage("exit_item_lore"));
@@ -218,7 +220,12 @@ class Mining implements Listener {
                     initialArrangement.clear();
                     puzzleAnswer.clear();
                     miningInterfaces.clear();
-                    generateNewPuzzle();
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            generateNewPuzzle();
+                        }
+                    }.runTaskLater(plugin, newPuzzleDelay);
                 } else {
                     player.playSound(player.getLocation(), sounds.getSound("click_solve_when_not_solved"), 1, 1);
                 }

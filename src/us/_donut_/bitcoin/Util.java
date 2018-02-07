@@ -48,6 +48,7 @@ class Util {
         if (!bitcoinConfig.contains("max_mining_reward")) { bitcoinConfig.set("max_mining_reward", 50); }
         if (!bitcoinConfig.contains("circulation_limit")) { bitcoinConfig.set("circulation_limit", -1); }
         if (!bitcoinConfig.contains("world")) { bitcoinConfig.set("world", "world"); }
+        if (!bitcoinConfig.contains("new_mining_puzzle_delay")) { bitcoinConfig.set("new_mining_puzzle_delay", 0); }
         if (!bitcoinConfig.contains("use_playerpoints")) { bitcoinConfig.set("use_playerpoints", false); }
         if (!bitcoinConfig.contains("use_pointsapi")) { bitcoinConfig.set("use_pointsapi", false); }
         saveYml(plugin.getConfigFile(), bitcoinConfig);

@@ -95,19 +95,25 @@ class Messages {
         if (!messagesConfig.contains("invalid_command")) { messagesConfig.set("invalid_command", "&cInvalid command."); }
         if (!messagesConfig.contains("never_joined")) { messagesConfig.set("never_joined", "&4{PLAYER} &chas never joined the server."); }
         if (!messagesConfig.contains("give_command")) { messagesConfig.set("give_command", "&aGave {AMOUNT} bitcoins to balance of &2{PLAYER}."); }
+        if (!messagesConfig.contains("give_command_invalid_arg")) { messagesConfig.set("give_command_invalid_arg", "&cInvalid argument."); }
         if (!messagesConfig.contains("remove_command")) { messagesConfig.set("remove_command", "&aRemoved {AMOUNT} bitcoins from balance of &2{PLAYER}."); }
+        if (!messagesConfig.contains("remove_command_invalid_arg")) { messagesConfig.set("remove_command_invalid_arg", "&cInvalid argument."); }
         if (!messagesConfig.contains("other_player_not_enough_bitcoins")) { messagesConfig.set("other_player_not_enough_bitcoins", "&c{PLAYER} only has {BALANCE} bitcoins."); }
         if (!messagesConfig.contains("set_command")) { messagesConfig.set("set_command", "&aSet balance of &2{PLAYER} &ato {AMOUNT} bitcoins."); }
+        if (!messagesConfig.contains("set_command_invalid_arg")) { messagesConfig.set("set_command_invalid_arg", "&cInvalid argument."); }
         if (!messagesConfig.contains("tax_command")) { messagesConfig.set("tax_command", "&3Purchase tax: &b{TAX}"); }
         if (!messagesConfig.contains("top_command_header")) { messagesConfig.set("top_command_header", "&9<<< Bitcoin Top Players >>>"); }
         if (!messagesConfig.contains("top_command_format")) { messagesConfig.set("top_command_format", "&3{PLACE}. {PLAYER}: &b{BALANCE} bitcoins"); }
         if (!messagesConfig.contains("reload_command")) { messagesConfig.set("reload_command", "&aSuccessfully reloaded bitcoin."); }
         if (!messagesConfig.contains("bank_command")) { messagesConfig.set("bank_command", "&3Amount of bitcoins in bank: &b{AMOUNT}"); }
         if (!messagesConfig.contains("value_command")) { messagesConfig.set("value_command", "&3Current value of 1 bitcoin: &b{VALUE}"); }
+        if (!messagesConfig.contains("buy_command_invalid_arg")) { messagesConfig.set("buy_command_invalid_arg", "&cInvalid argument."); }
+        if (!messagesConfig.contains("sell_command_invalid_arg")) { messagesConfig.set("sell_command_invalid_arg", "&cInvalid argument."); }
+        if (!messagesConfig.contains("transfer_command_invalid_arg")) { messagesConfig.set("transfer_command_invalid_arg", "&cInvalid argument."); }
         if (!messagesConfig.contains("exceeds_limit")) { messagesConfig.set("exceeds_limit", "&cThis amount would cause the number of bitcoins in circulation to exceed the limit of {LIMIT} bitcoins."); }
         if (!messagesConfig.contains("value_increase")) { messagesConfig.set("value_increase", Arrays.asList(" ", "&9<<< Daily Bitcoin Announcement >>>", "&3New bitcoin value: &b{VALUE}", "&aValue has increased by: &2{CHANGE}")); }
         if (!messagesConfig.contains("value_decrease")) { messagesConfig.set("value_decrease", Arrays.asList(" ", "&9<<< Daily Bitcoin Announcement >>>", "&3New bitcoin value: &b{VALUE}", "&cValue has decreased by: &4{CHANGE}")); }
-        if (!messagesConfig.contains("solved")) { messagesConfig.set("solved", new ArrayList<>(Arrays.asList(" ", "&9<<< Bitcoin Announcement >>>", "&3Puzzle solved by: &b{SOLVER}", "&3Reward: &b{REWARD} bitcoins", " "))); }
+        if (!messagesConfig.contains("solved")) { messagesConfig.set("solved", Arrays.asList(" ", "&9<<< Bitcoin Announcement >>>", "&3Puzzle solved by: &b{SOLVER}", "&3Reward: &b{REWARD} bitcoins", " ")); }
         if (!messagesConfig.contains("begin_transfer")) { messagesConfig.set("begin_transfer", Arrays.asList(" ", "&aYour balance: &2{BALANCE} bitcoins", "&aEnter the player and amount of bitcoins (e.g. Notch 5):")); }
         if (!messagesConfig.contains("begin_purchase")) { messagesConfig.set("begin_purchase", Arrays.asList(" ", "&aBitcoins in bank: &2{BANK} bitcoins", "&aBitcoin cost: &2{VALUE} per bitcoin", "&aTax: &2{TAX}", "&aEnter the amount of bitcoins you would like to buy:")); }
         if (!messagesConfig.contains("begin_exchange")) { messagesConfig.set("begin_exchange", Arrays.asList(" ", "&aYour balance: &2{BALANCE} bitcoins", "&aCurrent bitcoin value: &2{VALUE}", "&aEnter the amount of bitcoins you would like to sell:")); }
