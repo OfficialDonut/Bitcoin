@@ -11,8 +11,11 @@ public class Bitcoin extends JavaPlugin {
     private BitcoinManager bitcoinManager;
     private Mining mining;
     private BitcoinMenu bitcoinMenu;
+    private BlackMarket blackMarket;
     private File configFile;
     private YamlConfiguration bitcoinConfig;
+    private File blackMarketFile;
+    private YamlConfiguration blackMarketConfig;
     private ServerEconomy economy;
     private Messages messages;
     private Sounds sounds;
@@ -25,15 +28,18 @@ public class Bitcoin extends JavaPlugin {
         configFile = new File(getDataFolder(), "config.yml");
         bitcoinConfig = YamlConfiguration.loadConfiguration(configFile);
         if (!configFile.exists()) { getLogger().info("Generated config.yml!"); }
+        blackMarketFile = new File(getDataFolder(), "black_market.yml");
+        blackMarketConfig = YamlConfiguration.loadConfiguration(blackMarketFile);
+        if (!blackMarketFile.exists()) { getLogger().info("Generated black_market.yml!"); }
         if (new File(getDataFolder(), "Player Data").mkdirs()) { getLogger().info("Generated player data folder!"); }
         util.loadConfigDefaults();
-
         economy = new ServerEconomy(this);
         messages = new Messages(this);
         sounds = new Sounds(this);
         getServer().getPluginManager().registerEvents(bitcoinManager = new BitcoinManager(this), this);
         getServer().getPluginManager().registerEvents(mining = new Mining(this), this);
         getServer().getPluginManager().registerEvents(bitcoinMenu = new BitcoinMenu(this), this);
+        getServer().getPluginManager().registerEvents(blackMarket = new BlackMarket(this), this);
         BitcoinCommand bitcoinCommand;
         getServer().getPluginManager().registerEvents(bitcoinCommand = new BitcoinCommand(this), this);
         getCommand("bitcoin").setExecutor(bitcoinCommand);
@@ -57,15 +63,19 @@ public class Bitcoin extends JavaPlugin {
         bitcoinMenu.reload();
         bitcoinManager.reload();
         mining.reload();
+        blackMarket.reload();
     }
 
     Util getUtil() { return util; }
     BitcoinManager getBitcoinManager() { return bitcoinManager; }
     Mining getMining() { return mining; }
+    BlackMarket getBlackMarket() { return blackMarket; }
     BitcoinMenu getBitcoinMenu() { return bitcoinMenu; }
     ServerEconomy getEconomy() { return economy; }
     File getConfigFile() { return configFile; }
     YamlConfiguration getBitcoinConfig() { return bitcoinConfig; }
+    File getBlackMarketFile() { return blackMarketFile; }
+    YamlConfiguration getBlackMarketConfig() { return blackMarketConfig; }
     Messages getMessages() { return messages; }
     Sounds getSounds() { return sounds; }
 

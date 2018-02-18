@@ -52,6 +52,8 @@ class Sounds {
         if (!soundsConfig.contains("click_solve_when_not_solved")) { soundsConfig.set("click_solve_when_not_solved", "ENTITY_BAT_TAKEOFF"); }
         if (!soundsConfig.contains("puzzle_solved")) { soundsConfig.set("puzzle_solved", "ENTITY_PLAYER_LEVELUP"); }
         if (!soundsConfig.contains("exit_mining")) { soundsConfig.set("exit_mining", "ENTITY_BAT_TAKEOFF"); }
+        if (!soundsConfig.contains("black_market_not_enough_bitcoins")) { soundsConfig.set("black_market_not_enough_bitcoins", "ENTITY_BAT_TAKEOFF"); }
+        if (!soundsConfig.contains("black_market_purchase")) { soundsConfig.set("black_market_purchase", "ENTITY_EXPERIENCE_ORB_PICKUP"); }
         util.saveYml(soundsFile, soundsConfig);
     }
 

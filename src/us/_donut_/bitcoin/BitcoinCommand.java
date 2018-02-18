@@ -19,6 +19,7 @@ class BitcoinCommand implements CommandExecutor, Listener {
     private Util util;
     private BitcoinManager bitcoinManager;
     private BitcoinMenu bitcoinMenu;
+    private BlackMarket blackMarket;
     private Mining mining;
     private Messages messages;
     private Sounds sounds;
@@ -28,6 +29,7 @@ class BitcoinCommand implements CommandExecutor, Listener {
         util = plugin.getUtil();
         bitcoinManager = plugin.getBitcoinManager();
         bitcoinMenu = plugin.getBitcoinMenu();
+        blackMarket = plugin.getBlackMarket();
         mining = plugin.getMining();
         messages = plugin.getMessages();
         sounds = plugin.getSounds();
@@ -242,6 +244,35 @@ class BitcoinCommand implements CommandExecutor, Listener {
                     sender.sendMessage(messages.getMessage("circulation_command").replace("{AMOUNT}", String.valueOf(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBitcoinsInCirculation()))).replace("{LIMIT}", String.valueOf(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getCirculationLimit()))));
                 } else {
                     sender.sendMessage(messages.getMessage("circulation_command").replace("{AMOUNT}", String.valueOf(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBitcoinsInCirculation()))).replace("{LIMIT}", "none"));
+                }
+            }
+
+            else if (args[0].equalsIgnoreCase("blackmarket")) {
+                if (sender instanceof ConsoleCommandSender) { sender.sendMessage(messages.getMessage("cannot_use_from_console")); return true; }
+                Player player = (Player) sender;
+                if (args.length == 1) {
+                    if (!player.hasPermission("bitcoin.blackmarket")) { player.sendMessage(messages.getMessage("no_permission")); return true; }
+                    blackMarket.open(player);
+                } else {
+                    if (args.length < 4) { player.sendMessage(messages.getMessage("black_market_command_invalid_arg")); return true; }
+                    if (args[1].equalsIgnoreCase("setslot")) {
+                        if (!player.hasPermission("bitcoin.blackmarket.edit")) { player.sendMessage(messages.getMessage("no_permission")); return true; }
+                        try {
+                            int slot = Integer.valueOf(args[2]) - 1;
+                            try {
+                                double price = Double.valueOf(args[3]);
+                                if (slot < 0 || slot > 53 || price < 0) { player.sendMessage(messages.getMessage("invalid_number")); return true; }
+                                blackMarket.editItem(slot, player.getInventory().getItemInMainHand(), price);
+                                player.sendMessage(messages.getMessage("black_market_set_item"));
+                            } catch (NumberFormatException e) {
+                                player.sendMessage(messages.getMessage("invalid_number"));
+                            }
+                        } catch (NumberFormatException e) {
+                            player.sendMessage(messages.getMessage("invalid_number"));
+                        }
+                    } else {
+                        player.sendMessage(messages.getMessage("black_market_command_invalid_arg"));
+                    }
                 }
             }
 

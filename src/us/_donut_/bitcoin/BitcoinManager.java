@@ -27,6 +27,7 @@ class BitcoinManager implements Listener {
     private Map<UUID, File> playerFiles = new HashMap<>();
     private Map<UUID, YamlConfiguration> playerFileConfigs = new HashMap<>();
     private double bitcoinValue;
+    private double bitcoinMinValue;
     private int displayRoundAmount;
     private double minFluctuation;
     private double maxFluctuation;
@@ -56,6 +57,7 @@ class BitcoinManager implements Listener {
         amountInBank = plugin.getBitcoinConfig().getDouble("amount_in_bank");
         purchaseTaxPercentage = plugin.getBitcoinConfig().getDouble("purchase_tax_percentage");
         bitcoinValue = plugin.getBitcoinConfig().getDouble("bitcoin_value");
+        bitcoinMinValue = plugin.getBitcoinConfig().getDouble("bitcoin_min_value");
         displayRoundAmount = plugin.getBitcoinConfig().getInt("bitcoin_display_rounding");
         exchangeCurrencySymbol = plugin.getBitcoinConfig().getString("exchange_currency_symbol");
         circulationLimit = plugin.getBitcoinConfig().getDouble("circulation_limit");
@@ -188,16 +190,16 @@ class BitcoinManager implements Listener {
         Random random = new Random();
         double fluctuation = util.round(2, minFluctuation + (random.nextDouble() * (maxFluctuation - minFluctuation)));
         if (random.nextBoolean()) { fluctuation = fluctuation * -1; }
-        if (bitcoinValue + fluctuation < 0) {
-            fluctuation = Math.abs(bitcoinValue);
-            bitcoinValue = 0;
+        if (bitcoinValue + fluctuation < bitcoinMinValue) {
+            fluctuation = util.round(2,bitcoinValue - bitcoinMinValue);
+            bitcoinValue = bitcoinMinValue;
         } else {
             bitcoinValue = util.round(2, bitcoinValue + fluctuation);
         }
         plugin.getBitcoinConfig().set("bitcoin_value", bitcoinValue);
         util.saveYml(plugin.getConfigFile(), plugin.getBitcoinConfig());
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (bitcoinValue > (bitcoinValue - fluctuation)) {
+            if (bitcoinValue > (bitcoinValue - fluctuation) && bitcoinValue != bitcoinMinValue) {
                 player.sendMessage(messages.getMessage("value_increase").replace("{VALUE}", exchangeCurrencySymbol + bitcoinValue).replace("{CHANGE}", exchangeCurrencySymbol + (fluctuation)));
             } else {
                 player.sendMessage(messages.getMessage("value_decrease").replace("{VALUE}", exchangeCurrencySymbol + bitcoinValue).replace("{CHANGE}", exchangeCurrencySymbol + (fluctuation * -1)));

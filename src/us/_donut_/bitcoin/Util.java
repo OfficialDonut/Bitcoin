@@ -37,6 +37,7 @@ class Util {
     void loadConfigDefaults() {
         YamlConfiguration bitcoinConfig = plugin.getBitcoinConfig();
         if (!bitcoinConfig.contains("bitcoin_value")) { bitcoinConfig.set("bitcoin_value", 1000); }
+        if (!bitcoinConfig.contains("bitcoin_min_value")) { bitcoinConfig.set("bitcoin_min_value", 0); }
         if (!bitcoinConfig.contains("amount_in_bank")) { bitcoinConfig.set("amount_in_bank", 0); }
         if (!bitcoinConfig.contains("bitcoin_display_rounding")) { bitcoinConfig.set("bitcoin_display_rounding", 5); }
         if (!bitcoinConfig.contains("purchase_tax_percentage")) { bitcoinConfig.set("purchase_tax_percentage", 15); }
