@@ -296,5 +296,9 @@ class BitcoinCommand implements CommandExecutor, Listener {
             event.setCancelled(true);
             event.getPlayer().sendMessage("Unknown command. Type \"/help\" for help.");
         }
+        if (event.getMessage().split(" ")[0].equalsIgnoreCase("/btc") && !messages.getMessage("command_name").equalsIgnoreCase("/bitcoin")) {
+            event.setCancelled(true);
+            event.getPlayer().sendMessage("Unknown command. Type \"/help\" for help.");
+        }
     }
 }

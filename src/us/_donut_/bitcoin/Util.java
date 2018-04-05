@@ -36,8 +36,10 @@ class Util {
 
     void loadConfigDefaults() {
         YamlConfiguration bitcoinConfig = plugin.getBitcoinConfig();
+        if (!bitcoinConfig.contains("use_real_value")) { bitcoinConfig.set("use_real_value", false); }
         if (!bitcoinConfig.contains("bitcoin_value")) { bitcoinConfig.set("bitcoin_value", 1000); }
         if (!bitcoinConfig.contains("bitcoin_min_value")) { bitcoinConfig.set("bitcoin_min_value", 0); }
+        if (!bitcoinConfig.contains("bitcoin_max_value")) { bitcoinConfig.set("bitcoin_max_value", -1); }
         if (!bitcoinConfig.contains("amount_in_bank")) { bitcoinConfig.set("amount_in_bank", 0); }
         if (!bitcoinConfig.contains("bitcoin_display_rounding")) { bitcoinConfig.set("bitcoin_display_rounding", 5); }
         if (!bitcoinConfig.contains("purchase_tax_percentage")) { bitcoinConfig.set("purchase_tax_percentage", 15); }
@@ -50,6 +52,8 @@ class Util {
         if (!bitcoinConfig.contains("circulation_limit")) { bitcoinConfig.set("circulation_limit", -1); }
         if (!bitcoinConfig.contains("world")) { bitcoinConfig.set("world", "world"); }
         if (!bitcoinConfig.contains("new_mining_puzzle_delay")) { bitcoinConfig.set("new_mining_puzzle_delay", 0); }
+        if (!bitcoinConfig.contains("days_of_inactivity_until_balance_reset")) { bitcoinConfig.set("days_of_inactivity_until_balance_reset", 30); }
+        if (!bitcoinConfig.contains("broadcast_balance_reset_message")) { bitcoinConfig.set("broadcast_balance_reset_message", true); }
         if (!bitcoinConfig.contains("use_playerpoints")) { bitcoinConfig.set("use_playerpoints", false); }
         if (!bitcoinConfig.contains("use_pointsapi")) { bitcoinConfig.set("use_pointsapi", false); }
         saveYml(plugin.getConfigFile(), bitcoinConfig);
@@ -81,6 +85,9 @@ class Util {
                     SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();
                     skullMeta.setOwner(playerName);
                 }
+            } else {
+                UUID hashAsId = new UUID(skullTextures.get(playerUUID).hashCode(), skullTextures.get(playerUUID).hashCode());
+                skull = Bukkit.getUnsafe().modifyItemStack(skull, "{SkullOwner:{Id:\"" + hashAsId + "\",Properties:{textures:[{Value:\"" + skullTextures.get(playerUUID) + "\"}]}}}");
             }
         } else {
             SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();

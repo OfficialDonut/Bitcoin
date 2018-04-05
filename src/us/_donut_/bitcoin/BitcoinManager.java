@@ -11,7 +11,11 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,8 +30,11 @@ class BitcoinManager implements Listener {
     private Map<UUID, Double> bitcoinsMined = new HashMap<>();
     private Map<UUID, File> playerFiles = new HashMap<>();
     private Map<UUID, YamlConfiguration> playerFileConfigs = new HashMap<>();
+    private double lastRealValue = 1000;
+    private boolean useRealValue;
     private double bitcoinValue;
     private double bitcoinMinValue;
+    private double bitcoinMaxValue;
     private int displayRoundAmount;
     private double minFluctuation;
     private double maxFluctuation;
@@ -38,6 +45,9 @@ class BitcoinManager implements Listener {
     private Double purchaseTaxPercentage;
     private BukkitTask timeChecker;
     private BukkitTask frequencyChecker;
+    private BukkitTask inactivityChecker;
+    private double inactivityPeriod;
+    private boolean broadcastBalanceReset;
 
     BitcoinManager(Bitcoin pluginInstance) {
         plugin = pluginInstance;
@@ -58,6 +68,7 @@ class BitcoinManager implements Listener {
         purchaseTaxPercentage = plugin.getBitcoinConfig().getDouble("purchase_tax_percentage");
         bitcoinValue = plugin.getBitcoinConfig().getDouble("bitcoin_value");
         bitcoinMinValue = plugin.getBitcoinConfig().getDouble("bitcoin_min_value");
+        bitcoinMaxValue = plugin.getBitcoinConfig().getDouble("bitcoin_max_value");
         displayRoundAmount = plugin.getBitcoinConfig().getInt("bitcoin_display_rounding");
         exchangeCurrencySymbol = plugin.getBitcoinConfig().getString("exchange_currency_symbol");
         circulationLimit = plugin.getBitcoinConfig().getDouble("circulation_limit");
@@ -82,21 +93,33 @@ class BitcoinManager implements Listener {
             }
         }
 
+        inactivityPeriod = plugin.getBitcoinConfig().getDouble("days_of_inactivity_until_balance_reset") * 24 * 60 * 60 * 1000;
+        broadcastBalanceReset = plugin.getBitcoinConfig().getBoolean("broadcast_balance_reset_message");
+        if (inactivityChecker != null) {inactivityChecker.cancel();}
+        if (inactivityPeriod > 0) {
+            runInactivityChecker();
+        }
+
+        useRealValue = plugin.getBitcoinConfig().getBoolean("use_real_value");
         if (timeChecker != null) { timeChecker.cancel(); }
         if (frequencyChecker != null) { frequencyChecker.cancel(); }
-        String frequencyString = plugin.getBitcoinConfig().getString("fluctuation_frequency");
-        if (frequencyString.contains(":")) {
-            Long timeInTicks = util.getTicksFromTime(frequencyString);
-            if (timeInTicks == null) { timeInTicks = 1L; }
-            runTimeChecker(timeInTicks);
-        } else {
-            long frequency;
-            try {
-                frequency = Long.valueOf(frequencyString);
-            } catch (NumberFormatException e) {
-                frequency = 24000L;
+        if (!useRealValue) {
+            String frequencyString = plugin.getBitcoinConfig().getString("fluctuation_frequency");
+            if (frequencyString.contains(":")) {
+                Long timeInTicks = util.getTicksFromTime(frequencyString);
+                if (timeInTicks == null) {
+                    timeInTicks = 1L;
+                }
+                runTimeChecker(timeInTicks);
+            } else {
+                long frequency;
+                try {
+                    frequency = Long.valueOf(frequencyString);
+                } catch (NumberFormatException e) {
+                    frequency = 24000L;
+                }
+                runFrequencyChecker(frequency);
             }
-            runFrequencyChecker(frequency);
         }
     }
 
@@ -106,10 +129,26 @@ class BitcoinManager implements Listener {
     Double getBalance(UUID playerUUID) { return balances.get(playerUUID); }
     Integer getPuzzlesSolved(UUID playerUUID) { return puzzlesSolved.get(playerUUID); }
     Double getBitcoinsMined(UUID playerUUID) { return bitcoinsMined.get(playerUUID); }
-    Double getBitcoinValue() { return bitcoinValue; }
     Integer getDisplayRoundAmount() { return displayRoundAmount; }
     Double getCirculationLimit() { return circulationLimit; }
     String getExchangeCurrencySymbol() { return exchangeCurrencySymbol; }
+    Double getBitcoinValue() {
+        if (useRealValue) {
+             try {
+                 URL address = new URL("https://blockchain.info/ticker");
+                 InputStreamReader pageInput = new InputStreamReader(address.openStream());
+                 BufferedReader source = new BufferedReader(pageInput);
+                 source.readLine();
+                 double value = Double.valueOf(source.readLine().split("\"last\" : ")[1].split(",")[0]);
+                 lastRealValue = value;
+                 return value;
+             } catch (IOException | NumberFormatException e) {
+                 return lastRealValue;
+             }
+        } else {
+            return bitcoinValue;
+        }
+    }
 
     Double getBitcoinsInCirculation() {
         double bitcoins = 0;
@@ -191,8 +230,11 @@ class BitcoinManager implements Listener {
         double fluctuation = util.round(2, minFluctuation + (random.nextDouble() * (maxFluctuation - minFluctuation)));
         if (random.nextBoolean()) { fluctuation = fluctuation * -1; }
         if (bitcoinValue + fluctuation < bitcoinMinValue) {
-            fluctuation = util.round(2,bitcoinValue - bitcoinMinValue);
+            fluctuation = util.round(2, bitcoinValue - bitcoinMinValue);
             bitcoinValue = bitcoinMinValue;
+        } else if (bitcoinMaxValue > 0 && bitcoinValue + fluctuation > bitcoinMaxValue) {
+            fluctuation = util.round(2, bitcoinMaxValue - bitcoinValue);
+            bitcoinValue = bitcoinMaxValue;
         } else {
             bitcoinValue = util.round(2, bitcoinValue + fluctuation);
         }
@@ -245,5 +287,25 @@ class BitcoinManager implements Listener {
                 }
             }
         }.runTaskTimer(plugin, 0, 1);
+    }
+
+    private void runInactivityChecker() {
+        inactivityChecker = new BukkitRunnable() {
+            @Override
+            public void run() {
+                for (UUID uuid : balances.keySet()) {
+                    OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
+                    if ((System.currentTimeMillis() - player.getLastPlayed()) > inactivityPeriod) {
+                        if (balances.get(uuid) > 0 && !player.isOnline()) {
+                            if (broadcastBalanceReset) {
+                                Bukkit.broadcastMessage(messages.getMessage("inactive_balance_reset").replace("{AMOUNT}", String.valueOf(balances.get(uuid))).replace("{PLAYER}", player.getName()));
+                            }
+                            addToBank(balances.get(uuid));
+                            setBalance(uuid, 0);
+                        }
+                    }
+                }
+            }
+        }.runTaskTimer(plugin, 0, 12000);
     }
 }

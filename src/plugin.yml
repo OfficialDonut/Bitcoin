@@ -1,5 +1,5 @@
 name: Bitcoin
-version: 1.5
+version: 1.6
 author: _Donut_
 main: us._donut_.bitcoin.Bitcoin
 depend: [Vault]
@@ -8,6 +8,7 @@ commands:
   bitcoin:
     description: Opens bitcoin menu
     usage: /bitcoin
+    aliases: [btc]
 permissions:
   bitcoin.*:
     description: Gives access to all bitcoin commands

@@ -110,6 +110,7 @@ class BlackMarket implements Listener {
             if (slotItems.containsKey(slot)) {
                 if (bitcoinManager.getBalance(player.getUniqueId()) > slotPrices.get(slot)) {
                     bitcoinManager.withdraw(player.getUniqueId(), slotPrices.get(slot));
+                    bitcoinManager.addToBank(slotPrices.get(slot));
                     player.getInventory().addItem(slotItems.get(slot));
                     player.sendMessage(messages.getMessage("black_market_purchase").replace("{COST}", String.valueOf(slotPrices.get(slot))));
                     player.playSound(player.getLocation(), sounds.getSound("black_market_purchase"), 1, 1);

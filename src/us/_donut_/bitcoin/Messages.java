@@ -56,6 +56,7 @@ class Messages {
         if (!messagesConfig.contains("cancelled_exchange")) { messagesConfig.set("cancelled_exchange", "&cCancelled exchange."); }
         if (!messagesConfig.contains("nothing_to_cancel")) { messagesConfig.set("nothing_to_cancel", "&cNothing to cancel."); }
         if (!messagesConfig.contains("cannot_use_from_console")) { messagesConfig.set("cannot_use_from_console", "&cYou cannot use this command from console."); }
+        if (!messagesConfig.contains("inactive_balance_reset")) { messagesConfig.set("inactive_balance_reset", "&cThe bank reclaimed {AMOUNT} bitcoins from {PLAYER} for inactivity."); }
         if (!messagesConfig.contains("generating_puzzle")) { messagesConfig.set("generating_puzzle", "&aA new puzzle is being generated..."); }
         if (!messagesConfig.contains("generated_puzzle")) { messagesConfig.set("generated_puzzle", "&aPuzzle generated, be the first player to solve it to earn bitcoins!"); }
         if (!messagesConfig.contains("reward")) { messagesConfig.set("reward", "&aCongrats, you were rewarded {REWARD} bitcoins!"); }
