@@ -15,12 +15,14 @@ import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URL;
+import java.text.NumberFormat;
 import java.util.*;
 
 class Util {
 
     private Bitcoin plugin;
     private Map<UUID, String> skullTextures = new HashMap<>();
+    private NumberFormat numberFormat = NumberFormat.getInstance(Locale.US);
 
     Util(Bitcoin pluginInstance) {
         plugin = pluginInstance;
@@ -36,31 +38,44 @@ class Util {
 
     void loadConfigDefaults() {
         YamlConfiguration bitcoinConfig = plugin.getBitcoinConfig();
-        if (!bitcoinConfig.contains("use_real_value")) { bitcoinConfig.set("use_real_value", false); }
-        if (!bitcoinConfig.contains("bitcoin_value")) { bitcoinConfig.set("bitcoin_value", 1000); }
-        if (!bitcoinConfig.contains("bitcoin_min_value")) { bitcoinConfig.set("bitcoin_min_value", 0); }
-        if (!bitcoinConfig.contains("bitcoin_max_value")) { bitcoinConfig.set("bitcoin_max_value", -1); }
-        if (!bitcoinConfig.contains("amount_in_bank")) { bitcoinConfig.set("amount_in_bank", 0); }
-        if (!bitcoinConfig.contains("bitcoin_display_rounding")) { bitcoinConfig.set("bitcoin_display_rounding", 5); }
-        if (!bitcoinConfig.contains("purchase_tax_percentage")) { bitcoinConfig.set("purchase_tax_percentage", 15); }
-        if (!bitcoinConfig.contains("exchange_currency_symbol")) { bitcoinConfig.set("exchange_currency_symbol", "$"); }
-        if (!bitcoinConfig.contains("min_bitcoin_value_fluctuation")) { bitcoinConfig.set("min_bitcoin_value_fluctuation", 0); }
-        if (!bitcoinConfig.contains("max_bitcoin_value_fluctuation")) { bitcoinConfig.set("max_bitcoin_value_fluctuation", 100); }
-        if (!bitcoinConfig.contains("fluctuation_frequency")) { bitcoinConfig.set("fluctuation_frequency", "6:00"); }
-        if (!bitcoinConfig.contains("min_mining_reward")) { bitcoinConfig.set("min_mining_reward", 10); }
-        if (!bitcoinConfig.contains("max_mining_reward")) { bitcoinConfig.set("max_mining_reward", 50); }
-        if (!bitcoinConfig.contains("circulation_limit")) { bitcoinConfig.set("circulation_limit", -1); }
-        if (!bitcoinConfig.contains("world")) { bitcoinConfig.set("world", "world"); }
-        if (!bitcoinConfig.contains("new_mining_puzzle_delay")) { bitcoinConfig.set("new_mining_puzzle_delay", 0); }
-        if (!bitcoinConfig.contains("days_of_inactivity_until_balance_reset")) { bitcoinConfig.set("days_of_inactivity_until_balance_reset", 30); }
-        if (!bitcoinConfig.contains("broadcast_balance_reset_message")) { bitcoinConfig.set("broadcast_balance_reset_message", true); }
-        if (!bitcoinConfig.contains("use_playerpoints")) { bitcoinConfig.set("use_playerpoints", false); }
-        if (!bitcoinConfig.contains("use_pointsapi")) { bitcoinConfig.set("use_pointsapi", false); }
+        bitcoinConfig.addDefault("amount_in_bank", 0);
+        bitcoinConfig.addDefault("bitcoin_display_rounding", 5);
+        bitcoinConfig.addDefault("bitcoin_max_value", -1);
+        bitcoinConfig.addDefault("bitcoin_min_value", 0);
+        bitcoinConfig.addDefault("bitcoin_value", 1000);
+        bitcoinConfig.addDefault("broadcast_balance_reset_message", true);
+        bitcoinConfig.addDefault("broadcast_real_value", true);
+        bitcoinConfig.addDefault("circulation_limit", -1);
+        bitcoinConfig.addDefault("days_of_inactivity_until_balance_reset", 30);
+        bitcoinConfig.addDefault("exchange_currency_symbol", "$");
+        bitcoinConfig.addDefault("fluctuation_frequency", "6:00");
+        bitcoinConfig.addDefault("max_bitcoin_value_fluctuation", 100);
+        bitcoinConfig.addDefault("max_mining_reward", 50);
+        bitcoinConfig.addDefault("min_bitcoin_value_fluctuation", 0);
+        bitcoinConfig.addDefault("min_mining_reward", 10);
+        bitcoinConfig.addDefault("new_mining_puzzle_delay", 0);
+        bitcoinConfig.addDefault("purchase_tax_percentage", 15);
+        bitcoinConfig.addDefault("puzzle_difficulty", "easy");
+        bitcoinConfig.addDefault("use_playerpoints", false);
+        bitcoinConfig.addDefault("use_pointsapi", false);
+        bitcoinConfig.addDefault("use_real_value", false);
+        bitcoinConfig.addDefault("world", "world");
+
+        bitcoinConfig.options().copyDefaults(true);
         saveYml(plugin.getConfigFile(), bitcoinConfig);
     }
 
     ItemStack createItemStack(Material item, Short dataValue, String name, String lore) {
         ItemStack itemStack = new ItemStack(item, 1, dataValue);
+        ItemMeta itemMeta = itemStack.getItemMeta();
+        itemMeta.setDisplayName(name);
+        if (lore != null) { itemMeta.setLore(Arrays.asList(lore.split("\n"))); }
+        itemStack.setItemMeta(itemMeta);
+        return itemStack;
+    }
+
+    ItemStack createItemStackWithAmount(Material item, Integer amount, Short dataValue, String name, String lore) {
+        ItemStack itemStack = new ItemStack(item, amount, dataValue);
         ItemMeta itemMeta = itemStack.getItemMeta();
         itemMeta.setDisplayName(name);
         if (lore != null) { itemMeta.setLore(Arrays.asList(lore.split("\n"))); }
@@ -109,6 +124,15 @@ class Util {
         BigDecimal bd = new BigDecimal(value);
         bd = bd.setScale(places, RoundingMode.HALF_UP);
         return bd.doubleValue();
+    }
+
+    String formatNumber(Number number) {
+        if (String.valueOf(number).contains(".")) {
+            String[] num = String.valueOf(number).split("\\.");
+            return numberFormat.format(Integer.parseInt(num[0])) + "." + num[1];
+        } else {
+            return numberFormat.format(number);
+        }
     }
 
     Long getTicksFromTime(String time) {

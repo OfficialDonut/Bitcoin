@@ -6,20 +6,22 @@ import org.bukkit.entity.Player;
 public class RegisterPlaceholderAPI extends EZPlaceholderHook {
 
     private BitcoinManager bitcoinManager;
+    private Util util;
 
     public RegisterPlaceholderAPI(Bitcoin pluginInstance) {
         super(pluginInstance, "bitcoin");
         bitcoinManager = pluginInstance.getBitcoinManager();
+        util = pluginInstance.getUtil();
     }
 
     @Override
     public String onPlaceholderRequest(Player player, String identifier) {
         if (identifier.equals("value")) {
-            return bitcoinManager.getExchangeCurrencySymbol() + bitcoinManager.getBitcoinValue();
+            return bitcoinManager.getExchangeCurrencySymbol() + util.formatNumber(bitcoinManager.getBitcoinValue());
         }
 
         if (identifier.equals("bank")) {
-            return String.valueOf(bitcoinManager.getAmountInBank());
+            return util.formatNumber(bitcoinManager.getAmountInBank());
         }
 
         if (identifier.equals("tax")) {
@@ -27,11 +29,11 @@ public class RegisterPlaceholderAPI extends EZPlaceholderHook {
         }
 
         if (identifier.equals("circulation")) {
-            return String.valueOf(bitcoinManager.getBitcoinsInCirculation());
+            return util.formatNumber(bitcoinManager.getBitcoinsInCirculation());
         }
 
         if (identifier.equals("circulation_limit")) {
-            return String.valueOf(bitcoinManager.getCirculationLimit());
+            return util.formatNumber(bitcoinManager.getCirculationLimit());
         }
 
         if (player == null) {
@@ -39,15 +41,15 @@ public class RegisterPlaceholderAPI extends EZPlaceholderHook {
         }
 
         if (identifier.equals("balance")) {
-            return String.valueOf(bitcoinManager.getBalance(player.getUniqueId()));
+            return util.formatNumber(bitcoinManager.getBalance(player.getUniqueId()));
         }
 
         if (identifier.equals("amount_mined")) {
-            return String.valueOf(bitcoinManager.getBitcoinsMined(player.getUniqueId()));
+            return util.formatNumber(bitcoinManager.getBitcoinsMined(player.getUniqueId()));
         }
 
         if (identifier.equals("puzzles_solved")) {
-            return String.valueOf(bitcoinManager.getPuzzlesSolved(player.getUniqueId()));
+            return util.formatNumber(bitcoinManager.getPuzzlesSolved(player.getUniqueId()));
         }
         return null;
     }

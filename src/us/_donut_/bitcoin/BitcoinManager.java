@@ -28,6 +28,7 @@ class BitcoinManager implements Listener {
     private Map<UUID, Double> balances = new HashMap<>();
     private Map<UUID, Integer> puzzlesSolved = new HashMap<>();
     private Map<UUID, Double> bitcoinsMined = new HashMap<>();
+    private Map<UUID, Long> puzzleTimes = new HashMap<>();
     private Map<UUID, File> playerFiles = new HashMap<>();
     private Map<UUID, YamlConfiguration> playerFileConfigs = new HashMap<>();
     private double lastRealValue = 1000;
@@ -46,8 +47,10 @@ class BitcoinManager implements Listener {
     private BukkitTask timeChecker;
     private BukkitTask frequencyChecker;
     private BukkitTask inactivityChecker;
+    private BukkitTask notifyRealValue;
     private double inactivityPeriod;
     private boolean broadcastBalanceReset;
+    private boolean broadcastRealValue;
 
     BitcoinManager(Bitcoin pluginInstance) {
         plugin = pluginInstance;
@@ -90,6 +93,7 @@ class BitcoinManager implements Listener {
                 balances.put(playerUUID, config.getDouble("balance"));
                 puzzlesSolved.put(playerUUID, config.getInt("puzzles_solved"));
                 bitcoinsMined.put(playerUUID, config.getDouble("bitcoins_mined"));
+                puzzleTimes.put(playerUUID, config.getLong("best_puzzle_time"));
             }
         }
 
@@ -121,6 +125,26 @@ class BitcoinManager implements Listener {
                 runFrequencyChecker(frequency);
             }
         }
+        broadcastRealValue = plugin.getBitcoinConfig().getBoolean("broadcast_real_value");
+        if (notifyRealValue != null) { notifyRealValue.cancel(); }
+        if (useRealValue && broadcastRealValue) {
+            String frequencyString = plugin.getBitcoinConfig().getString("fluctuation_frequency");
+            if (frequencyString.contains(":")) {
+                Long timeInTicks = util.getTicksFromTime(frequencyString);
+                if (timeInTicks == null) {
+                    timeInTicks = 1L;
+                }
+                startRealValueTimeChecker(timeInTicks);
+            } else {
+                long frequency;
+                try {
+                    frequency = Long.valueOf(frequencyString);
+                } catch (NumberFormatException e) {
+                    frequency = 24000L;
+                }
+                startBroadcastRealValue(frequency);
+            }
+        }
     }
 
     Map<UUID, YamlConfiguration> getPlayerFileConfigs() { return playerFileConfigs; }
@@ -129,9 +153,11 @@ class BitcoinManager implements Listener {
     Double getBalance(UUID playerUUID) { return balances.get(playerUUID); }
     Integer getPuzzlesSolved(UUID playerUUID) { return puzzlesSolved.get(playerUUID); }
     Double getBitcoinsMined(UUID playerUUID) { return bitcoinsMined.get(playerUUID); }
+    Long getBestPuzzleTime(UUID playerUUID) { return puzzleTimes.get(playerUUID); }
     Integer getDisplayRoundAmount() { return displayRoundAmount; }
     Double getCirculationLimit() { return circulationLimit; }
     String getExchangeCurrencySymbol() { return exchangeCurrencySymbol; }
+
     Double getBitcoinValue() {
         if (useRealValue) {
              try {
@@ -141,9 +167,9 @@ class BitcoinManager implements Listener {
                  source.readLine();
                  double value = Double.valueOf(source.readLine().split("\"last\" : ")[1].split(",")[0]);
                  lastRealValue = value;
-                 return value;
+                 return util.round(2, value);
              } catch (IOException | NumberFormatException e) {
-                 return lastRealValue;
+                 return util.round(2, lastRealValue);
              }
         } else {
             return bitcoinValue;
@@ -210,6 +236,12 @@ class BitcoinManager implements Listener {
         util.saveYml(plugin.getConfigFile(), plugin.getBitcoinConfig());
     }
 
+    void setBestPuzzleTime(UUID playerUUID, long amount) {
+        puzzleTimes.put(playerUUID, amount);
+        playerFileConfigs.get(playerUUID).set("best_puzzle_time", puzzleTimes.get(playerUUID));
+        util.saveYml(playerFiles.get(playerUUID), playerFileConfigs.get(playerUUID));
+    }
+
     @EventHandler
     @SuppressWarnings("unused")
     public void onJoin(PlayerJoinEvent event) {
@@ -223,6 +255,7 @@ class BitcoinManager implements Listener {
         if (!playerFileConfig.contains("balance")) { setBalance(event.getPlayer().getUniqueId(), 0); }
         if (!playerFileConfig.contains("puzzles_solved")) { setPuzzlesSolved(event.getPlayer().getUniqueId(), 0); }
         if (!playerFileConfig.contains("bitcoins_mined")) { setBitcoinsMined(event.getPlayer().getUniqueId(), 0); }
+        if (!playerFileConfig.contains("best_puzzle_time")) { setBestPuzzleTime(event.getPlayer().getUniqueId(), 0); }
     }
 
     void fluctuate() {
@@ -307,5 +340,50 @@ class BitcoinManager implements Listener {
                 }
             }
         }.runTaskTimer(plugin, 0, 12000);
+    }
+
+    private void startBroadcastRealValue(long frequency) {
+        notifyRealValue = new BukkitRunnable() {
+            long timeSinceLastBroadcast = 0L;
+            Boolean alreadyBroadcasted = false;
+            @Override
+            public void run() {
+                timeSinceLastBroadcast++;
+                if (timeSinceLastBroadcast == frequency) {
+                    if (!alreadyBroadcasted) {
+                        for (Player player : plugin.getServer().getOnlinePlayers()) {
+                            player.sendMessage(messages.getMessage("real_value_announcement").replace("{VALUE}", exchangeCurrencySymbol + util.formatNumber(getBitcoinValue())));
+                            player.playSound(player.getLocation(), sounds.getSound("real_value_announcement"), 1, 1);
+                        }
+                        timeSinceLastBroadcast = 0;
+                        alreadyBroadcasted = true;
+                    }
+                }
+                if (alreadyBroadcasted && timeSinceLastBroadcast != frequency) {
+                    alreadyBroadcasted = false;
+                }
+            }
+        }.runTaskTimer(plugin, 0, 1);
+    }
+
+    private void startRealValueTimeChecker(long timeInTicks) {
+        notifyRealValue = new BukkitRunnable() {
+            Boolean alreadyBroadcasted = false;
+            @Override
+            public void run() {
+                if (world.getTime() % 24000 == timeInTicks) {
+                    if (!alreadyBroadcasted) {
+                        for (Player player : plugin.getServer().getOnlinePlayers()) {
+                            player.sendMessage(messages.getMessage("real_value_announcement").replace("{VALUE}", exchangeCurrencySymbol + util.formatNumber(getBitcoinValue())));
+                            player.playSound(player.getLocation(), sounds.getSound("real_value_announcement"), 1, 1);
+                        }
+                        alreadyBroadcasted = true;
+                    }
+                }
+                if (alreadyBroadcasted && world.getTime() % 24000 != timeInTicks) {
+                    alreadyBroadcasted = false;
+                }
+            }
+        }.runTaskTimer(plugin, 0, 1);
     }
 }

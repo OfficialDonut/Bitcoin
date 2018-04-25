@@ -1,5 +1,5 @@
 name: Bitcoin
-version: 1.6
+version: 1.7
 author: _Donut_
 main: us._donut_.bitcoin.Bitcoin
 depend: [Vault]
@@ -33,14 +33,16 @@ permissions:
       bitcoin.gui.buy: true
       bitcoin.gui.sell: true
       bitcoin.gui.mine: true
+      bitcoin.gui.help: true
+      bitcoin.gui.blackmarket: true
       bitcoin.blackmarket: true
       bitcoin.blackmarket.edit: true
   bitcoin.main:
     description: Allows /bitcoin
-    default: op
+    default: true
   bitcoin.help:
     description: Allows /bitcoin help
-    default: op
+    default: true
   bitcoin.value:
     description: Allows /bitcoin value
     default: op
@@ -100,4 +102,10 @@ permissions:
     default: op
   bitcoin.blackmarket.edit:
     description: Allows editing of black market
+    default: op
+  bitcoin.gui.blackmarket:
+    description: Allows black market item in GUI
+    default: op
+  bitcoin.gui.help:
+    description: Allows help item in GUI
     default: op

@@ -37,23 +37,29 @@ class Sounds {
     }
 
     private void loadDefaults() {
-        if (!soundsConfig.contains("cancelled_exchange")) { soundsConfig.set("cancelled_exchange", "ENTITY_BAT_TAKEOFF"); }
-        if (!soundsConfig.contains("cancelled_transfer")) { soundsConfig.set("cancelled_transfer", "ENTITY_BAT_TAKEOFF"); }
-        if (!soundsConfig.contains("value_change")) { soundsConfig.set("value_change", "ENTITY_PLAYER_LEVELUP"); }
-        if (!soundsConfig.contains("click_transfer_item")) { soundsConfig.set("click_transfer_item", "ENTITY_EXPERIENCE_ORB_PICKUP"); }
-        if (!soundsConfig.contains("click_buy_item")) { soundsConfig.set("click_buy_item", "ENTITY_EXPERIENCE_ORB_PICKUP"); }
-        if (!soundsConfig.contains("click_exchange_item")) { soundsConfig.set("click_exchange_item", "ENTITY_EXPERIENCE_ORB_PICKUP"); }
-        if (!soundsConfig.contains("click_mining_item")) { soundsConfig.set("click_mining_item", "ENTITY_EXPERIENCE_ORB_PICKUP"); }
-        if (!soundsConfig.contains("complete_transfer")) { soundsConfig.set("complete_transfer", "ENTITY_PLAYER_LEVELUP"); }
-        if (!soundsConfig.contains("complete_exchange")) { soundsConfig.set("complete_exchange", "ENTITY_PLAYER_LEVELUP"); }
-        if (!soundsConfig.contains("complete_purchase")) { soundsConfig.set("complete_purchase", "ENTITY_PLAYER_LEVELUP"); }
-        if (!soundsConfig.contains("no_economy")) { soundsConfig.set("no_economy", "ENTITY_BAT_TAKEOFF"); }
-        if (!soundsConfig.contains("reset_tiles")) { soundsConfig.set("reset_tiles", "ENTITY_GENERIC_EXPLODE"); }
-        if (!soundsConfig.contains("click_solve_when_not_solved")) { soundsConfig.set("click_solve_when_not_solved", "ENTITY_BAT_TAKEOFF"); }
-        if (!soundsConfig.contains("puzzle_solved")) { soundsConfig.set("puzzle_solved", "ENTITY_PLAYER_LEVELUP"); }
-        if (!soundsConfig.contains("exit_mining")) { soundsConfig.set("exit_mining", "ENTITY_BAT_TAKEOFF"); }
-        if (!soundsConfig.contains("black_market_not_enough_bitcoins")) { soundsConfig.set("black_market_not_enough_bitcoins", "ENTITY_BAT_TAKEOFF"); }
-        if (!soundsConfig.contains("black_market_purchase")) { soundsConfig.set("black_market_purchase", "ENTITY_EXPERIENCE_ORB_PICKUP"); }
+        soundsConfig.addDefault("black_market_not_enough_bitcoins", "ENTITY_BAT_TAKEOFF");
+        soundsConfig.addDefault("black_market_purchase", "ENTITY_EXPERIENCE_ORB_PICKUP");
+        soundsConfig.addDefault("cancelled_exchange", "ENTITY_BAT_TAKEOFF");
+        soundsConfig.addDefault("cancelled_purchase", "ENTITY_BAT_TAKEOFF");
+        soundsConfig.addDefault("cancelled_transfer", "ENTITY_BAT_TAKEOFF");
+        soundsConfig.addDefault("click_black_market_item", "ENTITY_EXPERIENCE_ORB_PICKUP");
+        soundsConfig.addDefault("click_buy_item", "ENTITY_EXPERIENCE_ORB_PICKUP");
+        soundsConfig.addDefault("click_exchange_item", "ENTITY_EXPERIENCE_ORB_PICKUP");
+        soundsConfig.addDefault("click_help_item", "ENTITY_EXPERIENCE_ORB_PICKUP");
+        soundsConfig.addDefault("click_mining_item", "ENTITY_EXPERIENCE_ORB_PICKUP");
+        soundsConfig.addDefault("click_solve_when_not_solved", "ENTITY_BAT_TAKEOFF");
+        soundsConfig.addDefault("click_transfer_item", "ENTITY_EXPERIENCE_ORB_PICKUP");
+        soundsConfig.addDefault("complete_exchange", "ENTITY_PLAYER_LEVELUP");
+        soundsConfig.addDefault("complete_purchase", "ENTITY_PLAYER_LEVELUP");
+        soundsConfig.addDefault("complete_transfer", "ENTITY_PLAYER_LEVELUP");
+        soundsConfig.addDefault("exit_mining", "ENTITY_BAT_TAKEOFF");
+        soundsConfig.addDefault("no_economy", "ENTITY_BAT_TAKEOFF");
+        soundsConfig.addDefault("puzzle_solved", "ENTITY_PLAYER_LEVELUP");
+        soundsConfig.addDefault("real_value_announcement", "ENTITY_PLAYER_LEVELUP");
+        soundsConfig.addDefault("reset_tiles", "ENTITY_GENERIC_EXPLODE");
+        soundsConfig.addDefault("value_change", "ENTITY_PLAYER_LEVELUP");
+
+        soundsConfig.options().copyDefaults(true);
         util.saveYml(soundsFile, soundsConfig);
     }
 

@@ -8,18 +8,19 @@ public class RegisterMVdWPlaceholderAPI {
 
     RegisterMVdWPlaceholderAPI(Bitcoin pluginInstance) {
         BitcoinManager bitcoinManager = pluginInstance.getBitcoinManager();
+        Util util = pluginInstance.getUtil();
 
         PlaceholderAPI.registerPlaceholder(pluginInstance, "bitcoin_value", new PlaceholderReplacer() {
             @Override
             public String onPlaceholderReplace(PlaceholderReplaceEvent placeholderReplaceEvent) {
-                return bitcoinManager.getExchangeCurrencySymbol() + bitcoinManager.getBitcoinValue();
+                return bitcoinManager.getExchangeCurrencySymbol() + util.formatNumber(bitcoinManager.getBitcoinValue());
             }
         });
 
         PlaceholderAPI.registerPlaceholder(pluginInstance, "bitcoin_bank", new PlaceholderReplacer() {
             @Override
             public String onPlaceholderReplace(PlaceholderReplaceEvent placeholderReplaceEvent) {
-                return String.valueOf(bitcoinManager.getAmountInBank());
+                return util.formatNumber(bitcoinManager.getAmountInBank());
             }
         });
 
@@ -33,14 +34,14 @@ public class RegisterMVdWPlaceholderAPI {
         PlaceholderAPI.registerPlaceholder(pluginInstance, "bitcoin_circulation", new PlaceholderReplacer() {
             @Override
             public String onPlaceholderReplace(PlaceholderReplaceEvent placeholderReplaceEvent) {
-                return String.valueOf(bitcoinManager.getBitcoinsInCirculation());
+                return util.formatNumber(bitcoinManager.getBitcoinsInCirculation());
             }
         });
 
         PlaceholderAPI.registerPlaceholder(pluginInstance, "bitcoin_circulation_limit", new PlaceholderReplacer() {
             @Override
             public String onPlaceholderReplace(PlaceholderReplaceEvent placeholderReplaceEvent) {
-                return String.valueOf(bitcoinManager.getCirculationLimit());
+                return util.formatNumber(bitcoinManager.getCirculationLimit());
             }
         });
 
@@ -50,7 +51,7 @@ public class RegisterMVdWPlaceholderAPI {
                 if (placeholderReplaceEvent.getOfflinePlayer() == null) {
                     return "";
                 } else {
-                    return String.valueOf(bitcoinManager.getBalance(placeholderReplaceEvent.getOfflinePlayer().getUniqueId()));
+                    return util.formatNumber(bitcoinManager.getBalance(placeholderReplaceEvent.getOfflinePlayer().getUniqueId()));
                 }
             }
         });
@@ -61,7 +62,7 @@ public class RegisterMVdWPlaceholderAPI {
                 if (placeholderReplaceEvent.getOfflinePlayer() == null) {
                     return "";
                 } else {
-                    return String.valueOf(bitcoinManager.getBitcoinsMined(placeholderReplaceEvent.getOfflinePlayer().getUniqueId()));
+                    return util.formatNumber(bitcoinManager.getBitcoinsMined(placeholderReplaceEvent.getOfflinePlayer().getUniqueId()));
                 }
             }
         });
@@ -72,7 +73,7 @@ public class RegisterMVdWPlaceholderAPI {
                 if (placeholderReplaceEvent.getOfflinePlayer() == null) {
                     return "";
                 } else {
-                    return String.valueOf(bitcoinManager.getPuzzlesSolved(placeholderReplaceEvent.getOfflinePlayer().getUniqueId()));
+                    return util.formatNumber(bitcoinManager.getPuzzlesSolved(placeholderReplaceEvent.getOfflinePlayer().getUniqueId()));
                 }
             }
         });

@@ -51,7 +51,7 @@ class BlackMarket implements Listener {
                 lore.addAll(itemMeta.getLore());
             }
             lore.add(" ");
-            lore.add(messages.getMessage("black_market_item_cost").replace("{COST}", String.valueOf(slotPrices.get(slot))));
+            lore.add(messages.getMessage("black_market_item_cost").replace("{COST}", util.formatNumber(slotPrices.get(slot))));
             itemMeta.setLore(lore);
             displayItem.setItemMeta(itemMeta);
             blackMarketInterface.setItem(slot, displayItem);
@@ -78,7 +78,7 @@ class BlackMarket implements Listener {
                 lore.addAll(itemMeta.getLore());
             }
             lore.add(" ");
-            lore.add(messages.getMessage("black_market_item_cost").replace("{COST}", String.valueOf(price)));
+            lore.add(messages.getMessage("black_market_item_cost").replace("{COST}", util.formatNumber(price)));
             itemMeta.setLore(lore);
             displayItem.setItemMeta(itemMeta);
             blackMarketInterface.setItem(slot, displayItem);
@@ -103,7 +103,7 @@ class BlackMarket implements Listener {
     @EventHandler
     @SuppressWarnings("unused")
     public void onInventoryClick(InventoryClickEvent event) {
-        if (event.getInventory().getName().equalsIgnoreCase(messages.getMessage("black_market_title"))) {
+        if (event.getClickedInventory() != null && event.getClickedInventory().getName() != null && event.getClickedInventory().getName().equalsIgnoreCase(messages.getMessage("black_market_title"))) {
             event.setCancelled(true);
             Player player = (Player) event.getWhoClicked();
             int slot = event.getSlot();
@@ -111,8 +111,8 @@ class BlackMarket implements Listener {
                 if (bitcoinManager.getBalance(player.getUniqueId()) > slotPrices.get(slot)) {
                     bitcoinManager.withdraw(player.getUniqueId(), slotPrices.get(slot));
                     bitcoinManager.addToBank(slotPrices.get(slot));
-                    player.getInventory().addItem(slotItems.get(slot));
-                    player.sendMessage(messages.getMessage("black_market_purchase").replace("{COST}", String.valueOf(slotPrices.get(slot))));
+                    player.getInventory().addItem(slotItems.get(slot).clone());
+                    player.sendMessage(messages.getMessage("black_market_purchase").replace("{COST}", util.formatNumber((slotPrices.get(slot)))));
                     player.playSound(player.getLocation(), sounds.getSound("black_market_purchase"), 1, 1);
                 } else {
                     player.sendMessage(messages.getMessage("black_market_not_enough_bitcoins"));

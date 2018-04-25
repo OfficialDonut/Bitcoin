@@ -30,7 +30,7 @@ public class Bitcoin extends JavaPlugin {
         if (!configFile.exists()) { getLogger().info("Generated config.yml!"); }
         blackMarketFile = new File(getDataFolder(), "black_market.yml");
         blackMarketConfig = YamlConfiguration.loadConfiguration(blackMarketFile);
-        if (!blackMarketFile.exists()) { getLogger().info("Generated black_market.yml!"); }
+        if (!blackMarketFile.exists()) { util.saveYml(blackMarketFile, blackMarketConfig); getLogger().info("Generated black_market.yml!"); }
         if (new File(getDataFolder(), "Player Data").mkdirs()) { getLogger().info("Generated player data folder!"); }
         util.loadConfigDefaults();
         economy = new ServerEconomy(this);
@@ -38,8 +38,8 @@ public class Bitcoin extends JavaPlugin {
         sounds = new Sounds(this);
         getServer().getPluginManager().registerEvents(bitcoinManager = new BitcoinManager(this), this);
         getServer().getPluginManager().registerEvents(mining = new Mining(this), this);
-        getServer().getPluginManager().registerEvents(bitcoinMenu = new BitcoinMenu(this), this);
         getServer().getPluginManager().registerEvents(blackMarket = new BlackMarket(this), this);
+        getServer().getPluginManager().registerEvents(bitcoinMenu = new BitcoinMenu(this), this);
         BitcoinCommand bitcoinCommand;
         getServer().getPluginManager().registerEvents(bitcoinCommand = new BitcoinCommand(this), this);
         getCommand("bitcoin").setExecutor(bitcoinCommand);
