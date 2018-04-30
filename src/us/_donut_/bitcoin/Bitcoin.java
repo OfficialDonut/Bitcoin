@@ -24,7 +24,6 @@ public class Bitcoin extends JavaPlugin {
     @Override
     public void onEnable() {
         util = new Util(this);
-
         configFile = new File(getDataFolder(), "config.yml");
         bitcoinConfig = YamlConfiguration.loadConfiguration(configFile);
         if (!configFile.exists()) { getLogger().info("Generated config.yml!"); }
