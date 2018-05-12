@@ -198,7 +198,7 @@ class BitcoinCommand implements CommandExecutor, Listener {
                 try {
                     double newBalance = Double.valueOf(args[2]);
                     if (newBalance < 0) { sender.sendMessage(messages.getMessage("invalid_number")); return true; }
-                    if (bitcoinManager.getCirculationLimit() > 0 && bitcoinManager.getBitcoinsInCirculation() + (newBalance - bitcoinManager.getBalance(recipient.getUniqueId())) >= bitcoinManager.getCirculationLimit()) { sender.sendMessage(messages.getMessage("exceeds_limit").replace("{LIMIT}", util.formatNumber((util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getCirculationLimit()))))); return true; }
+                    if (bitcoinManager.getCirculationLimit() > 0 && bitcoinManager.getBitcoinsInCirculation() + (newBalance - bitcoinManager.getBalance(recipient.getUniqueId())) >= bitcoinManager.getCirculationLimit()) { sender.sendMessage(messages.getMessage("exceeds_limit").replace("{LIMIT}", util.formatNumber(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getCirculationLimit())))); return true; }
                     bitcoinManager.setBalance(recipient.getUniqueId(), newBalance);
                     sender.sendMessage(messages.getMessage("set_command").replace("{AMOUNT}", util.formatNumber((newBalance))).replace("{PLAYER}", recipient.getName()));
                 } catch (NumberFormatException e) {
@@ -214,18 +214,61 @@ class BitcoinCommand implements CommandExecutor, Listener {
 
             else if (args[0].equalsIgnoreCase("top")) {
                 if (!sender.hasPermission("bitcoin.top")) { sender.sendMessage(messages.getMessage("no_permission")); return true; }
-                List<OfflinePlayer> topPlayers = bitcoinManager.getTopPlayers();
-                StringBuilder top5 = new StringBuilder();
+
+                List<OfflinePlayer> topBalPlayers = bitcoinManager.getTopBalPlayers();
+                StringBuilder top5Balances = new StringBuilder();
                 for (int i = 0; i < 5; i++) {
-                    if (i < topPlayers.size()) {
-                        top5.append(messages.getMessage("top_command_format").replace("{PLACE}", String.valueOf(i + 1)).replace("{PLAYER}", topPlayers.get(i).getName()).replace("{BALANCE}", util.formatNumber((util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBalance(topPlayers.get(i).getUniqueId()))))));
+                    if (i < topBalPlayers.size()) {
+                        top5Balances.append(messages.getMessage("top_bal_command_format").replace("{PLACE}", String.valueOf(i + 1)).replace("{PLAYER}", topBalPlayers.get(i).getName()).replace("{BALANCE}", util.formatNumber(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBalance(topBalPlayers.get(i).getUniqueId())))));
                     } else {
-                        top5.append(messages.getMessage("top_command_format").replace("{PLACE}", String.valueOf(i + 1)).replace("{PLAYER}", "N/A").replace("{BALANCE}", "0.0"));
+                        top5Balances.append(messages.getMessage("top_bal_command_format").replace("{PLACE}", String.valueOf(i + 1)).replace("{PLAYER}", "N/A").replace("{BALANCE}", "0"));
                     }
-                    if (i != 4) { top5.append("\n"); }
+                    if (i != 4) { top5Balances.append("\n"); }
                 }
-                sender.sendMessage(messages.getMessage("top_command_header"));
-                sender.sendMessage(top5.toString());
+
+                List<OfflinePlayer> topTimePlayers = bitcoinManager.getTopTimePlayers();
+                StringBuilder top5Times = new StringBuilder();
+                for (int i = 0; i < 5; i++) {
+                    if (i < topTimePlayers.size()) {
+                        top5Times.append(messages.getMessage("top_time_command_format").replace("{PLACE}", String.valueOf(i + 1)).replace("{PLAYER}", topTimePlayers.get(i).getName()).replace("{MIN}", String.valueOf(bitcoinManager.getBestPuzzleTime(topTimePlayers.get(i).getUniqueId()) / 60.0).split("\\.")[0]).replace("{SEC}", String.valueOf(bitcoinManager.getBestPuzzleTime(topTimePlayers.get(i).getUniqueId()) % 60)));
+                    } else {
+                        top5Times.append(messages.getMessage("top_time_command_format").replace("{PLACE}", String.valueOf(i + 1)).replace("{PLAYER}", "N/A").replace("{MIN}", "0").replace("{SEC}", "0"));
+                    }
+                    if (i != 4) { top5Times.append("\n"); }
+                }
+
+                List<OfflinePlayer> topSolvedPlayers = bitcoinManager.getTopSolvedPlayers();
+                StringBuilder top5Solved = new StringBuilder();
+                for (int i = 0; i < 5; i++) {
+                    if (i < topSolvedPlayers.size()) {
+                        top5Solved.append(messages.getMessage("top_solved_command_format").replace("{PLACE}", String.valueOf(i + 1)).replace("{PLAYER}", topSolvedPlayers.get(i).getName()).replace("{AMOUNT}", util.formatNumber(bitcoinManager.getPuzzlesSolved(topSolvedPlayers.get(i).getUniqueId()))));
+                    } else {
+                        top5Solved.append(messages.getMessage("top_solved_command_format").replace("{PLACE}", String.valueOf(i + 1)).replace("{PLAYER}", "N/A").replace("{AMOUNT}", "0"));
+                    }
+                    if (i != 4) { top5Solved.append("\n"); }
+                }
+
+                if (args.length == 1 || (!args[1].equalsIgnoreCase("bal") && !args[1].equalsIgnoreCase("time") && !args[1].equalsIgnoreCase("solved"))) {
+                    sender.sendMessage(messages.getMessage("top_bal_command_header"));
+                    sender.sendMessage(top5Balances.toString());
+                    sender.sendMessage("");
+                    sender.sendMessage(messages.getMessage("top_time_command_header"));
+                    sender.sendMessage(top5Times.toString());
+                    sender.sendMessage("");
+                    sender.sendMessage(messages.getMessage("top_solved_command_header"));
+                    sender.sendMessage(top5Solved.toString());
+                } else {
+                    if (args[1].equalsIgnoreCase("bal")) {
+                        sender.sendMessage(messages.getMessage("top_bal_command_header"));
+                        sender.sendMessage(top5Balances.toString());
+                    } else if (args[1].equalsIgnoreCase("time")) {
+                        sender.sendMessage(messages.getMessage("top_time_command_header"));
+                        sender.sendMessage(top5Times.toString());
+                    } else if (args[1].equalsIgnoreCase("solved")) {
+                        sender.sendMessage(messages.getMessage("top_solved_command_header"));
+                        sender.sendMessage(top5Solved.toString());
+                    }
+                }
             }
 
             else if (args[0].equalsIgnoreCase("bank")) {

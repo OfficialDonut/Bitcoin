@@ -79,7 +79,7 @@ class Messages {
         messagesConfig.addDefault("give_command_invalid_arg", "&cInvalid argument.");
         messagesConfig.addDefault("gray_tile", "&9&lGray");
         messagesConfig.addDefault("green_tile", "&9&lGreen");
-        messagesConfig.addDefault("help_command", Arrays.asList(" ", "&9<<< Bitcoin Commands >>>", "&3/bitcoin help: &bDisplay this page", "&3/bitcoin value: &bView current bitcoin value", "&3/bitcoin stats [player]: &bView player stats", "&3/bitcoin bank: &bView amount of bitcoins in bank", "&3/bitcoin tax: &bView the current purchase tax", "&3/bitcoin circulation: &bView circulation info", "&3/bitcoin top: &bView players with the most bitcoins", "&3/bitcoin mine: &bOpen mining interface", "&3/bitcoin transfer <player> <amount>: &bTransfer bitcoins", "&3/bitcoin sell <amount>: &bSell bitcoins", "&3/bitcoin buy <amount>: &bBuy bitcoins", "&3/bitcoin blackmarket: &bOpen black market", "&3/bitcoin blackmarket setslot <slot> <price>: &bEdit black market", "&3/bitcoin give <player> <amount>: &bAdd to balance", "&3/bitcoin remove <player> <amount>: &bRemove from balance", "&3/bitcoin set <player> <amount>: &bSet balance", "&3/bitcoin reload: &bReload plugin", "&3/bitcoin cancel: &bCancel transfer/purchase/sell"));
+        messagesConfig.addDefault("help_command", Arrays.asList(" ", "&9<<< Bitcoin Commands >>>", "&3/bitcoin help: &bDisplay this page", "&3/bitcoin value: &bView current bitcoin value", "&3/bitcoin stats [player]: &bView player stats", "&3/bitcoin bank: &bView amount of bitcoins in bank", "&3/bitcoin tax: &bView the current purchase tax", "&3/bitcoin circulation: &bView circulation info", "&3/bitcoin top [bal/time/solved]: &bView players with the top stats", "&3/bitcoin mine: &bOpen mining interface", "&3/bitcoin transfer <player> <amount>: &bTransfer bitcoins", "&3/bitcoin sell <amount>: &bSell bitcoins", "&3/bitcoin buy <amount>: &bBuy bitcoins", "&3/bitcoin blackmarket: &bOpen black market", "&3/bitcoin blackmarket setslot <slot> <price>: &bEdit black market", "&3/bitcoin give <player> <amount>: &bAdd to balance", "&3/bitcoin remove <player> <amount>: &bRemove from balance", "&3/bitcoin set <player> <amount>: &bSet balance", "&3/bitcoin reload: &bReload plugin", "&3/bitcoin cancel: &bCancel transfer/purchase/sell"));
         messagesConfig.addDefault("help_item_lore", "&3Click for list of commands");
         messagesConfig.addDefault("help_item_name", "&9&lHelp");
         messagesConfig.addDefault("inactive_balance_reset", "&cThe bank reclaimed {AMOUNT} bitcoins from {PLAYER} for inactivity.");
@@ -126,8 +126,12 @@ class Messages {
         messagesConfig.addDefault("statistic_item_lore", Arrays.asList("&3Balance: &b{BALANCE} bitcoins", "&3Mining puzzles solved: &b{AMOUNT_SOLVED}", "&3Bitcoins mined: &b{AMOUNT_MINED}", "&3Best puzzle time: &b{MIN} minutes {SEC} seconds"));
         messagesConfig.addDefault("statistic_item_name", "&9&lStatistics");
         messagesConfig.addDefault("tax_command", "&3Purchase tax: &b{TAX}");
-        messagesConfig.addDefault("top_command_format", "&3{PLACE}. {PLAYER}: &b{BALANCE} bitcoins");
-        messagesConfig.addDefault("top_command_header", "&9<<< Bitcoin Top Players >>>");
+        messagesConfig.addDefault("top_bal_command_format", "&3{PLACE}. {PLAYER}: &b{BALANCE} bitcoins");
+        messagesConfig.addDefault("top_solved_command_format", "&3{PLACE}. {PLAYER}: &b{AMOUNT} puzzles");
+        messagesConfig.addDefault("top_time_command_format", "&3{PLACE}. {PLAYER}: &b{MIN} minutes {SEC} seconds");
+        messagesConfig.addDefault("top_bal_command_header", "&9<<< Top Bitcoin Balances >>>");
+        messagesConfig.addDefault("top_solved_command_header", "&9<<< Most Puzzles Solved >>>");
+        messagesConfig.addDefault("top_time_command_header", "&9<<< Fastest Puzzle Times >>>");
         messagesConfig.addDefault("transfer_command_invalid_arg", "&cInvalid argument.");
         messagesConfig.addDefault("transfer_item_lore", "&3Transfer bitcoins to another account");
         messagesConfig.addDefault("transfer_item_name", "&9&lTransfer Bitcoins");

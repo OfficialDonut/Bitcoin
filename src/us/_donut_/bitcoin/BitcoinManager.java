@@ -185,10 +185,28 @@ class BitcoinManager implements Listener {
         return bitcoins;
     }
 
-    List<OfflinePlayer> getTopPlayers() {
+    List<OfflinePlayer> getTopBalPlayers() {
         Map<UUID, Double> sortedBalances = balances.entrySet().stream().sorted(Map.Entry.comparingByValue(Collections.reverseOrder())).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
         List<OfflinePlayer> topPlayers = new ArrayList<>();
         for (UUID uuid : sortedBalances.keySet()) {
+            topPlayers.add(Bukkit.getOfflinePlayer(uuid));
+        }
+        return topPlayers;
+    }
+
+    List<OfflinePlayer> getTopTimePlayers() {
+        Map<UUID, Long> sortedTimes = puzzleTimes.entrySet().stream().sorted(Map.Entry.comparingByValue(Collections.reverseOrder())).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        List<OfflinePlayer> topPlayers = new ArrayList<>();
+        for (UUID uuid : sortedTimes.keySet()) {
+            topPlayers.add(Bukkit.getOfflinePlayer(uuid));
+        }
+        return topPlayers;
+    }
+
+    List<OfflinePlayer> getTopSolvedPlayers() {
+        Map<UUID, Integer> sortedSolved = puzzlesSolved.entrySet().stream().sorted(Map.Entry.comparingByValue(Collections.reverseOrder())).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        List<OfflinePlayer> topPlayers = new ArrayList<>();
+        for (UUID uuid : sortedSolved.keySet()) {
             topPlayers.add(Bukkit.getOfflinePlayer(uuid));
         }
         return topPlayers;
@@ -328,13 +346,15 @@ class BitcoinManager implements Listener {
             public void run() {
                 for (UUID uuid : balances.keySet()) {
                     OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
-                    if ((System.currentTimeMillis() - player.getLastPlayed()) > inactivityPeriod) {
-                        if (balances.get(uuid) > 0 && !player.isOnline()) {
-                            if (broadcastBalanceReset) {
-                                Bukkit.broadcastMessage(messages.getMessage("inactive_balance_reset").replace("{AMOUNT}", String.valueOf(balances.get(uuid))).replace("{PLAYER}", player.getName()));
+                    if (player != null) {
+                        if ((System.currentTimeMillis() - player.getLastPlayed()) > inactivityPeriod) {
+                            if (balances.get(uuid) > 0 && !player.isOnline()) {
+                                if (broadcastBalanceReset) {
+                                    Bukkit.broadcastMessage(messages.getMessage("inactive_balance_reset").replace("{AMOUNT}", String.valueOf(balances.get(uuid))).replace("{PLAYER}", player.getName()));
+                                }
+                                addToBank(balances.get(uuid));
+                                setBalance(uuid, 0);
                             }
-                            addToBank(balances.get(uuid));
-                            setBalance(uuid, 0);
                         }
                     }
                 }

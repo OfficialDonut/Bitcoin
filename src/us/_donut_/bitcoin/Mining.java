@@ -61,7 +61,6 @@ class Mining implements Listener {
         miningInterfaces.clear();
         coloredGlass.clear();
         puzzleDifficulty = plugin.getBitcoinConfig().getString("puzzle_difficulty");
-        plugin.getLogger().info(puzzleDifficulty);
         if (!puzzleDifficulty.equalsIgnoreCase("easy") && !puzzleDifficulty.equalsIgnoreCase("hard")) {
             puzzleDifficulty = "easy";
         }

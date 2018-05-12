@@ -18,7 +18,7 @@ public class BitcoinAPI {
     }
 
     public Double getAmountInCirculation() { return bitcoinManager.getBitcoinsInCirculation(); }
-    public List<OfflinePlayer> getTopPlayers() { return bitcoinManager.getTopPlayers(); }
+    public List<OfflinePlayer> getTopPlayers() { return bitcoinManager.getTopBalPlayers(); }
     public Double getAmountInBank() { return bitcoinManager.getAmountInBank(); }
     public Double getPurchaseTaxPercentage() { return bitcoinManager.getPurchaseTaxPercentage(); }
     public Double getBalance(UUID playerUUID) { return bitcoinManager.getBalance(playerUUID); }
