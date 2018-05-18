@@ -358,7 +358,7 @@ class Mining implements Listener {
                     player.sendMessage(messages.getMessage("reward").replace("{REWARD}", String.valueOf(reward)));
                     for (Player loopPlayer : Bukkit.getOnlinePlayers()) {
                         if (loopPlayer.getOpenInventory().getTitle().equalsIgnoreCase(messages.getMessage("mining_menu_title"))) { loopPlayer.closeInventory(); }
-                        loopPlayer.sendMessage(messages.getMessage("solved").replace("{SOLVER}", player.getName()).replace("{REWARD}", String.valueOf(reward)).replace("{MIN}", String.valueOf(timers.get(player) / 60.0).split("\\.")[0]).replace("{SEC}", String.valueOf(timers.get(player) % 60)));
+                        loopPlayer.sendMessage(messages.getMessage("solved").replace("{SOLVER}", player.getDisplayName()).replace("{REWARD}", String.valueOf(reward)).replace("{MIN}", String.valueOf(timers.get(player) / 60.0).split("\\.")[0]).replace("{SEC}", String.valueOf(timers.get(player) % 60)));
                         loopPlayer.sendMessage(messages.getMessage("generating_puzzle"));
                         loopPlayer.playSound(loopPlayer.getLocation(), sounds.getSound("puzzle_solved"), 1, 1);
                     }

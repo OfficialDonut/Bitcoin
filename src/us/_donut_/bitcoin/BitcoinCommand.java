@@ -89,7 +89,7 @@ class BitcoinCommand implements CommandExecutor, Listener {
                 Player player = (Player) sender;
                 if (!player.hasPermission("bitcoin.stats")) { player.sendMessage(messages.getMessage("no_permission")); return true; }
                 if (args.length == 1) {
-                    player.sendMessage(messages.getMessage("statistic_command_self").replace("{BALANCE}", util.formatNumber((util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBalance(player.getUniqueId()))))).replace("{AMOUNT_SOLVED}", util.formatNumber((bitcoinManager.getPuzzlesSolved(player.getUniqueId())))).replace("{AMOUNT_MINED}", util.formatNumber((bitcoinManager.getBitcoinsMined(player.getUniqueId())))).replace("{MIN}", String.valueOf(bitcoinManager.getBestPuzzleTime(player.getUniqueId()) / 60.0).split("\\.")[0]).replace("{SEC}", String.valueOf(bitcoinManager.getBestPuzzleTime(player.getUniqueId()) % 60)));
+                    player.sendMessage(messages.getMessage("statistic_command_self").replace("{BALANCE}", util.formatNumber((util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBalance(player.getUniqueId()))))).replace("{AMOUNT_SOLVED}", util.formatNumber((bitcoinManager.getPuzzlesSolved(player.getUniqueId())))).replace("{AMOUNT_MINED}", util.formatNumber(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBitcoinsMined(player.getUniqueId())))).replace("{MIN}", String.valueOf(bitcoinManager.getBestPuzzleTime(player.getUniqueId()) / 60.0).split("\\.")[0]).replace("{SEC}", String.valueOf(bitcoinManager.getBestPuzzleTime(player.getUniqueId()) % 60)));
                 } else {
                     OfflinePlayer statPlayer = Bukkit.getOfflinePlayer(args[1]);
                     if (!bitcoinManager.getPlayerFileConfigs().containsKey(statPlayer.getUniqueId())) { sender.sendMessage(messages.getMessage("never_joined").replace("{PLAYER}", args[1])); return true; }
@@ -130,8 +130,8 @@ class BitcoinCommand implements CommandExecutor, Listener {
                     if (transferAmount <= 0) { player.sendMessage(messages.getMessage("invalid_number")); return true; }
                     bitcoinManager.withdraw(player.getUniqueId(), transferAmount);
                     bitcoinManager.deposit(recipient.getUniqueId(), transferAmount);
-                    player.sendMessage(messages.getMessage("complete_transfer").replace("{AMOUNT}", util.formatNumber((transferAmount))).replace("{RECIPIENT}", recipient.getName()));
-                    recipient.sendMessage(messages.getMessage("receive_bitcoins").replace("{AMOUNT}", util.formatNumber((transferAmount))).replace("{SENDER}", player.getName()));
+                    player.sendMessage(messages.getMessage("complete_transfer").replace("{AMOUNT}", util.formatNumber((transferAmount))).replace("{RECIPIENT}", recipient.getDisplayName()));
+                    recipient.sendMessage(messages.getMessage("receive_bitcoins").replace("{AMOUNT}", util.formatNumber((transferAmount))).replace("{SENDER}", player.getDisplayName()));
                 } catch (NumberFormatException e) {
                     player.sendMessage(messages.getMessage("invalid_number"));
                 }

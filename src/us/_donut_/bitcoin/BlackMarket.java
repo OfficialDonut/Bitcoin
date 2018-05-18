@@ -91,13 +91,19 @@ class BlackMarket implements Listener {
     @EventHandler
     @SuppressWarnings("unused")
     public void onDragInGUI(InventoryDragEvent event) {
-        if (event.getInventory().getName() != null && event.getInventory().getName().equalsIgnoreCase(messages.getMessage("black_market_title"))) { event.setCancelled(true); }
+        if (event.getInventory().getName() != null && event.getInventory().getName().equalsIgnoreCase(messages.getMessage("black_market_title"))) {
+            event.setCancelled(true);
+        } else if (event.getWhoClicked().getOpenInventory() != null && event.getWhoClicked().getOpenInventory().getTitle() != null && event.getWhoClicked().getOpenInventory().getTitle().equalsIgnoreCase(messages.getMessage("black_market_title"))) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
     @SuppressWarnings("unused")
     public void onMoveInGUI(InventoryMoveItemEvent event) {
-        if (event.getDestination().getName() != null && event.getDestination().getName().equalsIgnoreCase(messages.getMessage("black_market_title"))) { event.setCancelled(true); }
+        if (event.getDestination().getName() != null && event.getDestination().getName().equalsIgnoreCase(messages.getMessage("black_market_title"))) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
@@ -119,6 +125,8 @@ class BlackMarket implements Listener {
                     player.playSound(player.getLocation(), sounds.getSound("black_market_not_enough_bitcoins"), 1, 1);
                 }
             }
+        } else if (event.getWhoClicked().getOpenInventory() != null && event.getWhoClicked().getOpenInventory().getTitle() != null && event.getWhoClicked().getOpenInventory().getTitle().equalsIgnoreCase(messages.getMessage("black_market_title"))) {
+            event.setCancelled(true);
         }
     }
 }

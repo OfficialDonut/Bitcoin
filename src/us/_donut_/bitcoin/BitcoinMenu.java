@@ -76,7 +76,7 @@ class BitcoinMenu implements Listener {
 
     void open(Player player) {
         if (menus.containsKey(player)) {
-            menus.get(player).setItem(10, util.getSkull(player.getUniqueId(), player.getName(), messages.getMessage("statistic_item_name"), messages.getMessage("statistic_item_lore").replace("{BALANCE}", util.formatNumber(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBalance(player.getUniqueId())))).replace("{AMOUNT_SOLVED}", util.formatNumber(bitcoinManager.getPuzzlesSolved(player.getUniqueId()))).replace("{AMOUNT_MINED}", util.formatNumber(bitcoinManager.getBitcoinsMined(player.getUniqueId()))).replace("{MIN}", String.valueOf(bitcoinManager.getBestPuzzleTime(player.getUniqueId()) / 60.0).split("\\.")[0]).replace("{SEC}", String.valueOf(bitcoinManager.getBestPuzzleTime(player.getUniqueId()) % 60))));
+            menus.get(player).setItem(10, util.getSkull(player.getUniqueId(), player.getName(), messages.getMessage("statistic_item_name"), messages.getMessage("statistic_item_lore").replace("{BALANCE}", util.formatNumber(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBalance(player.getUniqueId())))).replace("{AMOUNT_SOLVED}", util.formatNumber(bitcoinManager.getPuzzlesSolved(player.getUniqueId()))).replace("{AMOUNT_MINED}", util.formatNumber(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBitcoinsMined(player.getUniqueId())))).replace("{MIN}", String.valueOf(bitcoinManager.getBestPuzzleTime(player.getUniqueId()) / 60.0).split("\\.")[0]).replace("{SEC}", String.valueOf(bitcoinManager.getBestPuzzleTime(player.getUniqueId()) % 60))));
         } else {
             createMenu(player);
         }
@@ -85,7 +85,7 @@ class BitcoinMenu implements Listener {
 
     private void createMenu(Player player) {
         Inventory menu = Bukkit.createInventory(null, 27, messages.getMessage("menu_title"));
-        menu.setItem(10, util.getSkull(player.getUniqueId(), player.getName(), messages.getMessage("statistic_item_name"), messages.getMessage("statistic_item_lore").replace("{BALANCE}", util.formatNumber(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBalance(player.getUniqueId())))).replace("{AMOUNT_SOLVED}", util.formatNumber(bitcoinManager.getPuzzlesSolved(player.getUniqueId()))).replace("{AMOUNT_MINED}", util.formatNumber(bitcoinManager.getBitcoinsMined(player.getUniqueId()))).replace("{MIN}", String.valueOf(bitcoinManager.getBestPuzzleTime(player.getUniqueId()) / 60.0).split("\\.")[0]).replace("{SEC}", String.valueOf(bitcoinManager.getBestPuzzleTime(player.getUniqueId()) % 60))));
+        menu.setItem(10, util.getSkull(player.getUniqueId(), player.getName(), messages.getMessage("statistic_item_name"), messages.getMessage("statistic_item_lore").replace("{BALANCE}", util.formatNumber(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBalance(player.getUniqueId())))).replace("{AMOUNT_SOLVED}", util.formatNumber(bitcoinManager.getPuzzlesSolved(player.getUniqueId()))).replace("{AMOUNT_MINED}", util.formatNumber(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBitcoinsMined(player.getUniqueId())))).replace("{MIN}", String.valueOf(bitcoinManager.getBestPuzzleTime(player.getUniqueId()) / 60.0).split("\\.")[0]).replace("{SEC}", String.valueOf(bitcoinManager.getBestPuzzleTime(player.getUniqueId()) % 60))));
         menu.setItem(11, transferBitcoinItem);
         menu.setItem(12, buyBitcoinItem);
         menu.setItem(13, exchangeBitcoinItem);
@@ -144,7 +144,7 @@ class BitcoinMenu implements Listener {
                 player.closeInventory();
                 player.playSound(player.getLocation(), sounds.getSound("click_transfer_item"), 1, 1);
                 playersTransferring.add(player);
-                player.sendMessage(messages.getMessage("begin_transfer").replace("{BALANCE}", String.valueOf(bitcoinManager.getBalance(player.getUniqueId()))));
+                player.sendMessage(messages.getMessage("begin_transfer").replace("{BALANCE}", String.valueOf(util.formatNumber(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBalance(player.getUniqueId()))))));
                 sendCancelButton(player);
                 new BukkitRunnable() {
                     @Override

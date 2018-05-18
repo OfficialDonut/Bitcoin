@@ -150,10 +150,10 @@ class BitcoinManager implements Listener {
     Map<UUID, YamlConfiguration> getPlayerFileConfigs() { return playerFileConfigs; }
     Double getAmountInBank() { return amountInBank; }
     Double getPurchaseTaxPercentage() { return purchaseTaxPercentage; }
-    Double getBalance(UUID playerUUID) { return balances.get(playerUUID); }
-    Integer getPuzzlesSolved(UUID playerUUID) { return puzzlesSolved.get(playerUUID); }
-    Double getBitcoinsMined(UUID playerUUID) { return bitcoinsMined.get(playerUUID); }
-    Long getBestPuzzleTime(UUID playerUUID) { return puzzleTimes.get(playerUUID); }
+    Double getBalance(UUID playerUUID) { return balances.getOrDefault(playerUUID, 0.0); }
+    Integer getPuzzlesSolved(UUID playerUUID) { return puzzlesSolved.getOrDefault(playerUUID, 0); }
+    Double getBitcoinsMined(UUID playerUUID) { return bitcoinsMined.getOrDefault(playerUUID, 0.0); }
+    Long getBestPuzzleTime(UUID playerUUID) { return puzzleTimes.getOrDefault(playerUUID, 0L); }
     Integer getDisplayRoundAmount() { return displayRoundAmount; }
     Double getCirculationLimit() { return circulationLimit; }
     String getExchangeCurrencySymbol() { return exchangeCurrencySymbol; }
@@ -195,10 +195,12 @@ class BitcoinManager implements Listener {
     }
 
     List<OfflinePlayer> getTopTimePlayers() {
-        Map<UUID, Long> sortedTimes = puzzleTimes.entrySet().stream().sorted(Map.Entry.comparingByValue(Collections.reverseOrder())).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        Map<UUID, Long> sortedTimes = puzzleTimes.entrySet().stream().sorted(Map.Entry.comparingByValue()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
         List<OfflinePlayer> topPlayers = new ArrayList<>();
         for (UUID uuid : sortedTimes.keySet()) {
-            topPlayers.add(Bukkit.getOfflinePlayer(uuid));
+            if (sortedTimes.get(uuid) != 0) {
+                topPlayers.add(Bukkit.getOfflinePlayer(uuid));
+            }
         }
         return topPlayers;
     }
