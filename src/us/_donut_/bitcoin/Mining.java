@@ -352,7 +352,7 @@ class Mining implements Listener {
                     bitcoinManager.deposit(player.getUniqueId(), reward);
                     bitcoinManager.setPuzzlesSolved(player.getUniqueId(), bitcoinManager.getPuzzlesSolved(player.getUniqueId()) + 1);
                     bitcoinManager.setBitcoinsMined(player.getUniqueId(), bitcoinManager.getBitcoinsMined(player.getUniqueId()) + reward);
-                    if (timers.get(player) < bitcoinManager.getBestPuzzleTime(player.getUniqueId())) {
+                    if (timers.get(player) < bitcoinManager.getBestPuzzleTime(player.getUniqueId()) || bitcoinManager.getBestPuzzleTime(player.getUniqueId()) == 0L) {
                         bitcoinManager.setBestPuzzleTime(player.getUniqueId(), timers.get(player));
                     }
                     player.sendMessage(messages.getMessage("reward").replace("{REWARD}", String.valueOf(reward)));

@@ -88,12 +88,16 @@ class BitcoinManager implements Listener {
             for (File file : playerDataFiles) {
                 YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
                 UUID playerUUID = UUID.fromString(file.getName().split("\\.yml")[0]);
-                playerFiles.put(playerUUID, file);
-                playerFileConfigs.put(playerUUID, config);
-                balances.put(playerUUID, config.getDouble("balance"));
-                puzzlesSolved.put(playerUUID, config.getInt("puzzles_solved"));
-                bitcoinsMined.put(playerUUID, config.getDouble("bitcoins_mined"));
-                puzzleTimes.put(playerUUID, config.getLong("best_puzzle_time"));
+                if (Bukkit.getOfflinePlayer(playerUUID) != null && Bukkit.getOfflinePlayer(playerUUID).getName() != null) {
+                    playerFiles.put(playerUUID, file);
+                    playerFileConfigs.put(playerUUID, config);
+                    balances.put(playerUUID, config.getDouble("balance"));
+                    puzzlesSolved.put(playerUUID, config.getInt("puzzles_solved"));
+                    bitcoinsMined.put(playerUUID, config.getDouble("bitcoins_mined"));
+                    puzzleTimes.put(playerUUID, config.getLong("best_puzzle_time"));
+                } else {
+                    file.delete();
+                }
             }
         }
 
@@ -256,8 +260,8 @@ class BitcoinManager implements Listener {
         util.saveYml(plugin.getConfigFile(), plugin.getBitcoinConfig());
     }
 
-    void setBestPuzzleTime(UUID playerUUID, long amount) {
-        puzzleTimes.put(playerUUID, amount);
+    void setBestPuzzleTime(UUID playerUUID, long time) {
+        puzzleTimes.put(playerUUID, time);
         playerFileConfigs.get(playerUUID).set("best_puzzle_time", puzzleTimes.get(playerUUID));
         util.saveYml(playerFiles.get(playerUUID), playerFileConfigs.get(playerUUID));
     }
@@ -348,15 +352,13 @@ class BitcoinManager implements Listener {
             public void run() {
                 for (UUID uuid : balances.keySet()) {
                     OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
-                    if (player != null) {
-                        if ((System.currentTimeMillis() - player.getLastPlayed()) > inactivityPeriod) {
-                            if (balances.get(uuid) > 0 && !player.isOnline()) {
-                                if (broadcastBalanceReset) {
-                                    Bukkit.broadcastMessage(messages.getMessage("inactive_balance_reset").replace("{AMOUNT}", String.valueOf(balances.get(uuid))).replace("{PLAYER}", player.getName()));
-                                }
-                                addToBank(balances.get(uuid));
-                                setBalance(uuid, 0);
+                    if ((System.currentTimeMillis() - player.getLastPlayed()) > inactivityPeriod) {
+                        if (balances.get(uuid) > 0 && !player.isOnline()) {
+                            if (broadcastBalanceReset) {
+                                Bukkit.broadcastMessage(messages.getMessage("inactive_balance_reset").replace("{AMOUNT}", String.valueOf(balances.get(uuid))).replace("{PLAYER}", player.getName()));
                             }
+                            addToBank(balances.get(uuid));
+                            setBalance(uuid, 0);
                         }
                     }
                 }
