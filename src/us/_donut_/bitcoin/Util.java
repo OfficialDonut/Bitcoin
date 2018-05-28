@@ -3,6 +3,7 @@ package us._donut_.bitcoin;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -23,6 +24,7 @@ class Util {
     private Bitcoin plugin;
     private Map<UUID, String> skullTextures = new HashMap<>();
     private NumberFormat numberFormat = NumberFormat.getInstance(Locale.US);
+    private Map<UUID, OfflinePlayer> uuidOfflinePlayerMap = new HashMap<>();
 
     Util(Bitcoin pluginInstance) {
         plugin = pluginInstance;
@@ -146,5 +148,9 @@ class Util {
         }
         if (hours > 24 || hours < 0 || minutes > 59 || minutes < 0) { return null; }
         return (long) (((18001 + (hours * 1000) + ((minutes / 60.0) * 1000))) % 24000);
+    }
+
+    Map<UUID, OfflinePlayer> getUUIDOfflinePlayerMap() {
+        return uuidOfflinePlayerMap;
     }
 }

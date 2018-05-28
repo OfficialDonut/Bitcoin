@@ -88,15 +88,15 @@ class BitcoinManager implements Listener {
             for (File file : playerDataFiles) {
                 YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
                 UUID playerUUID = UUID.fromString(file.getName().split("\\.yml")[0]);
-                if (Bukkit.getOfflinePlayer(playerUUID) != null && Bukkit.getOfflinePlayer(playerUUID).getName() != null) {
+                OfflinePlayer player = Bukkit.getOfflinePlayer(playerUUID);
+                if (player != null && player.getName() != null) {
                     playerFiles.put(playerUUID, file);
                     playerFileConfigs.put(playerUUID, config);
                     balances.put(playerUUID, config.getDouble("balance"));
                     puzzlesSolved.put(playerUUID, config.getInt("puzzles_solved"));
                     bitcoinsMined.put(playerUUID, config.getDouble("bitcoins_mined"));
                     puzzleTimes.put(playerUUID, config.getLong("best_puzzle_time"));
-                } else {
-                    file.delete();
+                    util.getUUIDOfflinePlayerMap().put(playerUUID, player);
                 }
             }
         }
@@ -351,7 +351,13 @@ class BitcoinManager implements Listener {
             @Override
             public void run() {
                 for (UUID uuid : balances.keySet()) {
-                    OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
+                    OfflinePlayer player;
+                    if (util.getUUIDOfflinePlayerMap().containsKey(uuid)) {
+                        player = util.getUUIDOfflinePlayerMap().get(uuid);
+                    } else {
+                        player = Bukkit.getOfflinePlayer(uuid);
+                        util.getUUIDOfflinePlayerMap().put(uuid, player);
+                    }
                     if ((System.currentTimeMillis() - player.getLastPlayed()) > inactivityPeriod) {
                         if (balances.get(uuid) > 0 && !player.isOnline()) {
                             if (broadcastBalanceReset) {
