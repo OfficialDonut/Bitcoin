@@ -1,5 +1,5 @@
 name: Bitcoin
-version: 1.9.5
+version: 2.0
 author: _Donut_
 main: us._donut_.bitcoin.Bitcoin
 depend: [Vault]
@@ -29,6 +29,7 @@ permissions:
       bitcoin.stats: true
       bitcoin.top: true
       bitcoin.circulation: true
+      bitcoin.reset: true
       bitcoin.gui.transfer: true
       bitcoin.gui.buy: true
       bitcoin.gui.sell: true
@@ -84,6 +85,9 @@ permissions:
     default: op
   bitcoin.circulation:
     description: Allows /bitcoin circulation
+    default: op
+  bitcoin.reset:
+    description: Allows /bitcoin reset
     default: op
   bitcoin.gui.transfer:
     description: Allows transferring from GUI

@@ -264,8 +264,8 @@ class BitcoinMenu implements Listener {
                 if (transferAmount <= 0) { player.sendMessage(messages.getMessage("invalid_number")); return; }
                 bitcoinManager.withdraw(player.getUniqueId(), transferAmount);
                 bitcoinManager.deposit(recipient.getUniqueId(), transferAmount);
-                player.sendMessage(messages.getMessage("complete_transfer").replace("{AMOUNT}", util.formatNumber(transferAmount)).replace("{RECIPIENT}", recipient.getName()));
-                recipient.sendMessage(messages.getMessage("receive_bitcoins").replace("{AMOUNT}", util.formatNumber(transferAmount)).replace("{SENDER}", player.getName()));
+                player.sendMessage(messages.getMessage("complete_transfer").replace("{AMOUNT}", util.formatNumber(transferAmount)).replace("{RECIPIENT}", bitcoinManager.getOfflinePlayerName(recipient)));
+                recipient.sendMessage(messages.getMessage("receive_bitcoins").replace("{AMOUNT}", util.formatNumber(transferAmount)).replace("{SENDER}", player.getDisplayName()));
                 player.playSound(player.getLocation(), sounds.getSound("complete_transfer"), 1, 1);
                 recipient.playSound(player.getLocation(), sounds.getSound("complete_transfer"), 1, 1);
                 playersTransferring.remove(player);

@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -31,6 +32,7 @@ class BitcoinManager implements Listener {
     private Map<UUID, Long> puzzleTimes = new HashMap<>();
     private Map<UUID, File> playerFiles = new HashMap<>();
     private Map<UUID, YamlConfiguration> playerFileConfigs = new HashMap<>();
+    private Map<OfflinePlayer, String> offlinePlayerDisplayNames = new HashMap<>();
     private double lastRealValue = 1000;
     private boolean useRealValue;
     private double bitcoinValue;
@@ -218,6 +220,10 @@ class BitcoinManager implements Listener {
         return topPlayers;
     }
 
+    String getOfflinePlayerName(OfflinePlayer offlinePlayer) {
+        return offlinePlayerDisplayNames.getOrDefault(offlinePlayer, offlinePlayer.getName());
+    }
+
     void setBalance(UUID playerUUID, double balance) {
         balances.put(playerUUID, balance);
         playerFileConfigs.get(playerUUID).set("balance", balance);
@@ -266,20 +272,62 @@ class BitcoinManager implements Listener {
         util.saveYml(playerFiles.get(playerUUID), playerFileConfigs.get(playerUUID));
     }
 
+    void setOfflinePlayerName(OfflinePlayer offlinePlayer, String name) {
+        offlinePlayerDisplayNames.put(offlinePlayer, name);
+        UUID uuid = offlinePlayer.getUniqueId();
+        playerFileConfigs.get(uuid).set("display_name", offlinePlayerDisplayNames.get(offlinePlayer));
+        util.saveYml(playerFiles.get(uuid), playerFileConfigs.get(uuid));
+    }
+
+    void resetBalances() {
+        for (UUID uuid : balances.keySet()) {
+            setBalance(uuid, 0);
+        }
+    }
+
+    void resetMined() {
+        for (UUID uuid : bitcoinsMined.keySet()) {
+            setBitcoinsMined(uuid, 0);
+        }
+    }
+
+    void resetSolved() {
+        for (UUID uuid : puzzlesSolved.keySet()) {
+            setPuzzlesSolved(uuid, 0);
+        }
+    }
+
+    void resetTimes() {
+        for (UUID uuid : puzzleTimes.keySet()) {
+            setBestPuzzleTime(uuid, 0L);
+        }
+    }
+
     @EventHandler
     @SuppressWarnings("unused")
     public void onJoin(PlayerJoinEvent event) {
-        if (!playerFiles.containsKey(event.getPlayer().getUniqueId())) {
-            File file = new File(plugin.getDataFolder() + File.separator + "Player Data" + File.separator + event.getPlayer().getUniqueId().toString() + ".yml");
-            playerFiles.put(event.getPlayer().getUniqueId(), file);
-            playerFileConfigs.put(event.getPlayer().getUniqueId(), YamlConfiguration.loadConfiguration(file));
+        UUID playerUUID = event.getPlayer().getUniqueId();
+        if (!playerFiles.containsKey(playerUUID)) {
+            File file = new File(plugin.getDataFolder() + File.separator + "Player Data" + File.separator + playerUUID.toString() + ".yml");
+            playerFiles.put(playerUUID, file);
+            playerFileConfigs.put(playerUUID, YamlConfiguration.loadConfiguration(file));
         }
-        File playerFile = playerFiles.get(event.getPlayer().getUniqueId());
-        YamlConfiguration playerFileConfig = playerFileConfigs.get(event.getPlayer().getUniqueId());
-        if (!playerFileConfig.contains("balance")) { setBalance(event.getPlayer().getUniqueId(), 0); }
-        if (!playerFileConfig.contains("puzzles_solved")) { setPuzzlesSolved(event.getPlayer().getUniqueId(), 0); }
-        if (!playerFileConfig.contains("bitcoins_mined")) { setBitcoinsMined(event.getPlayer().getUniqueId(), 0); }
-        if (!playerFileConfig.contains("best_puzzle_time")) { setBestPuzzleTime(event.getPlayer().getUniqueId(), 0); }
+        File playerFile = playerFiles.get(playerUUID);
+        YamlConfiguration playerFileConfig = playerFileConfigs.get(playerUUID);
+        if (!playerFileConfig.contains("balance")) { setBalance(playerUUID, 0); }
+        if (!playerFileConfig.contains("puzzles_solved")) { setPuzzlesSolved(playerUUID, 0); }
+        if (!playerFileConfig.contains("bitcoins_mined")) { setBitcoinsMined(playerUUID, 0); }
+        if (!playerFileConfig.contains("best_puzzle_time")) { setBestPuzzleTime(playerUUID, 0); }
+        if (!playerFileConfig.contains("display_name")) { setOfflinePlayerName(Bukkit.getOfflinePlayer(playerUUID), event.getPlayer().getDisplayName()); }
+    }
+
+    @EventHandler
+    @SuppressWarnings("unused")
+    public void onQuit(PlayerQuitEvent event) {
+        UUID playerUUID = event.getPlayer().getUniqueId();
+        File playerFile = playerFiles.get(playerUUID);
+        YamlConfiguration playerFileConfig = playerFileConfigs.get(playerUUID);
+        setOfflinePlayerName(Bukkit.getOfflinePlayer(playerUUID), event.getPlayer().getDisplayName());
     }
 
     void fluctuate() {
@@ -381,8 +429,9 @@ class BitcoinManager implements Listener {
                 timeSinceLastBroadcast++;
                 if (timeSinceLastBroadcast == frequency) {
                     if (!alreadyBroadcasted) {
+                        String value = util.formatNumber(getBitcoinValue());
                         for (Player player : plugin.getServer().getOnlinePlayers()) {
-                            player.sendMessage(messages.getMessage("real_value_announcement").replace("{VALUE}", exchangeCurrencySymbol + util.formatNumber(getBitcoinValue())));
+                            player.sendMessage(messages.getMessage("real_value_announcement").replace("{VALUE}", exchangeCurrencySymbol + value));
                             player.playSound(player.getLocation(), sounds.getSound("real_value_announcement"), 1, 1);
                         }
                         timeSinceLastBroadcast = 0;
