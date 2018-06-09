@@ -1,5 +1,5 @@
 name: Bitcoin
-version: 2.0.5
+version: 2.1
 author: _Donut_
 main: us._donut_.bitcoin.Bitcoin
 depend: [Vault]

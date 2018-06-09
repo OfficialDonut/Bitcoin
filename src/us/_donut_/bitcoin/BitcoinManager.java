@@ -101,7 +101,9 @@ class BitcoinManager implements Listener {
                     puzzlesSolved.put(playerUUID, config.getInt("puzzles_solved"));
                     bitcoinsMined.put(playerUUID, config.getDouble("bitcoins_mined"));
                     puzzleTimes.put(playerUUID, config.getLong("best_puzzle_time"));
-                    offlinePlayerDisplayNames.put(playerUUID, config.getString("display_name"));
+                    if (config.contains("display_name")) {
+                        offlinePlayerDisplayNames.put(playerUUID, config.getString("display_name"));
+                    }
                     util.getUUIDOfflinePlayerMap().put(playerUUID, player);
                 }
             }
