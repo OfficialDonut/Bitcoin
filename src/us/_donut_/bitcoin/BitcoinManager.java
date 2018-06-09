@@ -9,7 +9,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.BufferedReader;
@@ -32,7 +31,7 @@ class BitcoinManager implements Listener {
     private Map<UUID, Long> puzzleTimes = new HashMap<>();
     private Map<UUID, File> playerFiles = new HashMap<>();
     private Map<UUID, YamlConfiguration> playerFileConfigs = new HashMap<>();
-    private Map<OfflinePlayer, String> offlinePlayerDisplayNames = new HashMap<>();
+    private Map<UUID, String> offlinePlayerDisplayNames = new HashMap<>();
     private double lastRealValue = 1000;
     private boolean useRealValue;
     private double bitcoinValue;
@@ -53,6 +52,10 @@ class BitcoinManager implements Listener {
     private double inactivityPeriod;
     private boolean broadcastBalanceReset;
     private boolean broadcastRealValue;
+    private boolean alreadyFluctuated = false;
+    private boolean alreadyBroadcasted = false;
+    private long timeSinceLastFluctuation = 0L;
+    private long timeSinceLastBroadcast = 0L;
 
     BitcoinManager(Bitcoin pluginInstance) {
         plugin = pluginInstance;
@@ -98,6 +101,7 @@ class BitcoinManager implements Listener {
                     puzzlesSolved.put(playerUUID, config.getInt("puzzles_solved"));
                     bitcoinsMined.put(playerUUID, config.getDouble("bitcoins_mined"));
                     puzzleTimes.put(playerUUID, config.getLong("best_puzzle_time"));
+                    offlinePlayerDisplayNames.put(playerUUID, config.getString("display_name"));
                     util.getUUIDOfflinePlayerMap().put(playerUUID, player);
                 }
             }
@@ -221,7 +225,7 @@ class BitcoinManager implements Listener {
     }
 
     String getOfflinePlayerName(OfflinePlayer offlinePlayer) {
-        return offlinePlayerDisplayNames.getOrDefault(offlinePlayer, offlinePlayer.getName());
+        return offlinePlayerDisplayNames.getOrDefault(offlinePlayer.getUniqueId(), offlinePlayer.getName());
     }
 
     void setBalance(UUID playerUUID, double balance) {
@@ -272,11 +276,10 @@ class BitcoinManager implements Listener {
         util.saveYml(playerFiles.get(playerUUID), playerFileConfigs.get(playerUUID));
     }
 
-    void setOfflinePlayerName(OfflinePlayer offlinePlayer, String name) {
-        offlinePlayerDisplayNames.put(offlinePlayer, name);
-        UUID uuid = offlinePlayer.getUniqueId();
-        playerFileConfigs.get(uuid).set("display_name", offlinePlayerDisplayNames.get(offlinePlayer));
-        util.saveYml(playerFiles.get(uuid), playerFileConfigs.get(uuid));
+    private void setOfflinePlayerName(UUID playerUUID, String name) {
+        offlinePlayerDisplayNames.put(playerUUID, name);
+        playerFileConfigs.get(playerUUID).set("display_name", name);
+        util.saveYml(playerFiles.get(playerUUID), playerFileConfigs.get(playerUUID));
     }
 
     void resetBalances() {
@@ -318,7 +321,7 @@ class BitcoinManager implements Listener {
         if (!playerFileConfig.contains("puzzles_solved")) { setPuzzlesSolved(playerUUID, 0); }
         if (!playerFileConfig.contains("bitcoins_mined")) { setBitcoinsMined(playerUUID, 0); }
         if (!playerFileConfig.contains("best_puzzle_time")) { setBestPuzzleTime(playerUUID, 0); }
-        if (!playerFileConfig.contains("display_name")) { setOfflinePlayerName(Bukkit.getOfflinePlayer(playerUUID), event.getPlayer().getDisplayName()); }
+        Bukkit.getScheduler().runTaskLater(plugin, () -> setOfflinePlayerName(event.getPlayer().getUniqueId(), event.getPlayer().getDisplayName()), 20);
     }
 
     @EventHandler
@@ -327,7 +330,7 @@ class BitcoinManager implements Listener {
         UUID playerUUID = event.getPlayer().getUniqueId();
         File playerFile = playerFiles.get(playerUUID);
         YamlConfiguration playerFileConfig = playerFileConfigs.get(playerUUID);
-        setOfflinePlayerName(Bukkit.getOfflinePlayer(playerUUID), event.getPlayer().getDisplayName());
+        setOfflinePlayerName(event.getPlayer().getUniqueId(), event.getPlayer().getDisplayName());
     }
 
     void fluctuate() {
@@ -356,113 +359,93 @@ class BitcoinManager implements Listener {
     }
 
     private void runTimeChecker(long timeInTicks) {
-        timeChecker = new BukkitRunnable() {
-            Boolean alreadyFluctuated = false;
-            @Override
-            public void run() {
-                if (world.getTime() % 24000 == timeInTicks) {
-                    if (!alreadyFluctuated) {
-                        fluctuate();
-                        alreadyFluctuated = true;
-                    }
-                }
-                if (alreadyFluctuated && world.getTime() % 24000 != timeInTicks) {
-                    alreadyFluctuated = false;
+        timeChecker = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            if (world.getTime() % 24000 == timeInTicks) {
+                if (!alreadyFluctuated) {
+                    fluctuate();
+                    alreadyFluctuated = true;
                 }
             }
-        }.runTaskTimer(plugin, 0, 1);
+            if (alreadyFluctuated && world.getTime() % 24000 != timeInTicks) {
+                alreadyFluctuated = false;
+            }
+        },0, 1);
     }
 
     private void runFrequencyChecker(long frequency) {
-        frequencyChecker = new BukkitRunnable() {
-            long timeSinceLastFluctuation = 0L;
-            Boolean alreadyFluctuated = false;
-            @Override
-            public void run() {
-                timeSinceLastFluctuation++;
-                if (timeSinceLastFluctuation == frequency) {
-                    if (!alreadyFluctuated) {
-                        fluctuate();
-                        timeSinceLastFluctuation = 0;
-                        alreadyFluctuated = true;
-                    }
-                }
-                if (alreadyFluctuated && timeSinceLastFluctuation != frequency) {
-                    alreadyFluctuated = false;
+        frequencyChecker = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            timeSinceLastFluctuation++;
+            if (timeSinceLastFluctuation == frequency) {
+                if (!alreadyFluctuated) {
+                    fluctuate();
+                    timeSinceLastFluctuation = 0;
+                    alreadyFluctuated = true;
                 }
             }
-        }.runTaskTimer(plugin, 0, 1);
+            if (alreadyFluctuated && timeSinceLastFluctuation != frequency) {
+                alreadyFluctuated = false;
+            }
+        },0, 1);
     }
 
     private void runInactivityChecker() {
-        inactivityChecker = new BukkitRunnable() {
-            @Override
-            public void run() {
-                for (UUID uuid : balances.keySet()) {
-                    OfflinePlayer player;
-                    if (util.getUUIDOfflinePlayerMap().containsKey(uuid)) {
-                        player = util.getUUIDOfflinePlayerMap().get(uuid);
-                    } else {
-                        player = Bukkit.getOfflinePlayer(uuid);
-                        util.getUUIDOfflinePlayerMap().put(uuid, player);
-                    }
-                    if ((System.currentTimeMillis() - player.getLastPlayed()) > inactivityPeriod) {
-                        if (balances.get(uuid) > 0 && !player.isOnline()) {
-                            if (broadcastBalanceReset) {
-                                Bukkit.broadcastMessage(messages.getMessage("inactive_balance_reset").replace("{AMOUNT}", String.valueOf(balances.get(uuid))).replace("{PLAYER}", player.getName()));
-                            }
-                            addToBank(balances.get(uuid));
-                            setBalance(uuid, 0);
+        inactivityChecker = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            for (UUID uuid : balances.keySet()) {
+                OfflinePlayer player;
+                if (util.getUUIDOfflinePlayerMap().containsKey(uuid)) {
+                    player = util.getUUIDOfflinePlayerMap().get(uuid);
+                } else {
+                    player = Bukkit.getOfflinePlayer(uuid);
+                    util.getUUIDOfflinePlayerMap().put(uuid, player);
+                }
+                if ((System.currentTimeMillis() - player.getLastPlayed()) > inactivityPeriod) {
+                    if (balances.get(uuid) > 0 && !player.isOnline()) {
+                        if (broadcastBalanceReset) {
+                            Bukkit.broadcastMessage(messages.getMessage("inactive_balance_reset").replace("{AMOUNT}", String.valueOf(balances.get(uuid))).replace("{PLAYER}", player.getName()));
                         }
+                        addToBank(balances.get(uuid));
+                        setBalance(uuid, 0);
                     }
                 }
             }
-        }.runTaskTimer(plugin, 0, 12000);
+        },0, 12000);
     }
 
     private void startBroadcastRealValue(long frequency) {
-        notifyRealValue = new BukkitRunnable() {
-            long timeSinceLastBroadcast = 0L;
-            Boolean alreadyBroadcasted = false;
-            @Override
-            public void run() {
-                timeSinceLastBroadcast++;
-                if (timeSinceLastBroadcast == frequency) {
-                    if (!alreadyBroadcasted) {
-                        String value = util.formatNumber(getBitcoinValue());
-                        for (Player player : plugin.getServer().getOnlinePlayers()) {
-                            player.sendMessage(messages.getMessage("real_value_announcement").replace("{VALUE}", exchangeCurrencySymbol + value));
-                            player.playSound(player.getLocation(), sounds.getSound("real_value_announcement"), 1, 1);
-                        }
-                        timeSinceLastBroadcast = 0;
-                        alreadyBroadcasted = true;
+        notifyRealValue = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            timeSinceLastBroadcast++;
+            if (timeSinceLastBroadcast == frequency) {
+                if (!alreadyBroadcasted) {
+                    String value = util.formatNumber(getBitcoinValue());
+                    for (Player player : plugin.getServer().getOnlinePlayers()) {
+                        player.sendMessage(messages.getMessage("real_value_announcement").replace("{VALUE}", exchangeCurrencySymbol + value));
+                        player.playSound(player.getLocation(), sounds.getSound("real_value_announcement"), 1, 1);
                     }
-                }
-                if (alreadyBroadcasted && timeSinceLastBroadcast != frequency) {
-                    alreadyBroadcasted = false;
+                    timeSinceLastBroadcast = 0;
+                    alreadyBroadcasted = true;
                 }
             }
-        }.runTaskTimer(plugin, 0, 1);
+            if (alreadyBroadcasted && timeSinceLastBroadcast != frequency) {
+                alreadyBroadcasted = false;
+            }
+        },0, 1);
     }
 
     private void startRealValueTimeChecker(long timeInTicks) {
-        notifyRealValue = new BukkitRunnable() {
-            Boolean alreadyBroadcasted = false;
-            @Override
-            public void run() {
-                if (world.getTime() % 24000 == timeInTicks) {
-                    if (!alreadyBroadcasted) {
-                        for (Player player : plugin.getServer().getOnlinePlayers()) {
-                            player.sendMessage(messages.getMessage("real_value_announcement").replace("{VALUE}", exchangeCurrencySymbol + util.formatNumber(getBitcoinValue())));
-                            player.playSound(player.getLocation(), sounds.getSound("real_value_announcement"), 1, 1);
-                        }
-                        alreadyBroadcasted = true;
+        notifyRealValue = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            if (world.getTime() % 24000 == timeInTicks) {
+                if (!alreadyBroadcasted) {
+                    String value = util.formatNumber(getBitcoinValue());
+                    for (Player player : plugin.getServer().getOnlinePlayers()) {
+                        player.sendMessage(messages.getMessage("real_value_announcement").replace("{VALUE}", exchangeCurrencySymbol + value));
+                        player.playSound(player.getLocation(), sounds.getSound("real_value_announcement"), 1, 1);
                     }
-                }
-                if (alreadyBroadcasted && world.getTime() % 24000 != timeInTicks) {
-                    alreadyBroadcasted = false;
+                    alreadyBroadcasted = true;
                 }
             }
-        }.runTaskTimer(plugin, 0, 1);
+            if (alreadyBroadcasted && world.getTime() % 24000 != timeInTicks) {
+                alreadyBroadcasted = false;
+            }
+        },0, 1);
     }
 }

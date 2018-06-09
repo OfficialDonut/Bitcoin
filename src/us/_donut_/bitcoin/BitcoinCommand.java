@@ -302,18 +302,14 @@ class BitcoinCommand implements CommandExecutor, Listener {
                         if (!player.hasPermission("bitcoin.blackmarket.edit")) { player.sendMessage(messages.getMessage("no_permission")); return true; }
                         try {
                             int slot = Integer.valueOf(args[2]) - 1;
-                            try {
-                                double price = Double.valueOf(args[3]);
-                                if (slot < 0 || slot > 53 || price < 0) { player.sendMessage(messages.getMessage("invalid_number")); return true; }
-                                if (!Bukkit.getVersion().contains("1.8") && !Bukkit.getVersion().contains("1.7")) {
-                                    blackMarket.editItem(slot, player.getInventory().getItemInMainHand(), price);
-                                } else {
-                                    blackMarket.editItem(slot, player.getInventory().getItemInHand(), price);
-                                }
-                                player.sendMessage(messages.getMessage("black_market_set_item"));
-                            } catch (NumberFormatException e) {
-                                player.sendMessage(messages.getMessage("invalid_number"));
+                            double price = Double.valueOf(args[3]);
+                            if (slot < 0 || slot > 53 || price < 0) { player.sendMessage(messages.getMessage("invalid_number")); return true; }
+                            if (!Bukkit.getVersion().contains("1.8") && !Bukkit.getVersion().contains("1.7")) {
+                                blackMarket.editItem(slot, player.getInventory().getItemInMainHand(), price);
+                            } else {
+                                blackMarket.editItem(slot, player.getInventory().getItemInHand(), price);
                             }
+                            player.sendMessage(messages.getMessage("black_market_set_item"));
                         } catch (NumberFormatException e) {
                             player.sendMessage(messages.getMessage("invalid_number"));
                         }

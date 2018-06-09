@@ -69,7 +69,7 @@ class BlackMarket implements Listener {
             slotPrices.remove(slot);
             plugin.getBlackMarketConfig().set(String.valueOf(slot), null);
         } else {
-            slotItems.put(slot, itemStack);
+            slotItems.put(slot, itemStack.clone());
             slotPrices.put(slot, price);
             ItemStack displayItem = itemStack.clone();
             ItemMeta itemMeta = displayItem.getItemMeta();

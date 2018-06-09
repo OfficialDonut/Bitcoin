@@ -17,7 +17,6 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
 
@@ -98,20 +97,17 @@ class BitcoinMenu implements Listener {
     }
 
     private void updateGlassInMenus() {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                for (Inventory menu : menus.values()) {
-                    if (menu.getItem(0).getDurability() == (short) 11) {
-                        for (int slot : evenSlots) { menu.setItem(slot, lightBlueGlass); }
-                        for (int slot : oddSlots) { menu.setItem(slot, darkBlueGlass); }
-                    } else {
-                        for (int slot : evenSlots) { menu.setItem(slot, darkBlueGlass); }
-                        for (int slot : oddSlots) { menu.setItem(slot, lightBlueGlass); }
-                    }
+        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            for (Inventory menu : menus.values()) {
+                if (menu.getItem(0).getDurability() == (short) 11) {
+                    for (int slot : evenSlots) { menu.setItem(slot, lightBlueGlass); }
+                    for (int slot : oddSlots) { menu.setItem(slot, darkBlueGlass); }
+                } else {
+                    for (int slot : evenSlots) { menu.setItem(slot, darkBlueGlass); }
+                    for (int slot : oddSlots) { menu.setItem(slot, lightBlueGlass); }
                 }
             }
-        }.runTaskTimer(plugin, 0, 5);
+        },0, 5);
     }
 
     private void sendCancelButton(Player player) {
@@ -146,14 +142,11 @@ class BitcoinMenu implements Listener {
                 playersTransferring.add(player);
                 player.sendMessage(messages.getMessage("begin_transfer").replace("{BALANCE}", String.valueOf(util.formatNumber(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBalance(player.getUniqueId()))))));
                 sendCancelButton(player);
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        if (playersTransferring.contains(player)) {
-                            player.performCommand("bitcoin cancel");
-                        }
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    if (playersTransferring.contains(player)) {
+                        player.performCommand("bitcoin cancel");
                     }
-                }.runTaskLater(plugin, 300);
+                }, 300);
             } else if (event.getSlot() == 12) {
                 if (!player.hasPermission("bitcoin.gui.buy")) { player.sendMessage(messages.getMessage("no_permission")); }
                 if (!plugin.getEconomy().hasEconomy()) {
@@ -165,14 +158,11 @@ class BitcoinMenu implements Listener {
                     playersBuying.add(player);
                     player.sendMessage(messages.getMessage("begin_purchase").replace("{BANK}", String.valueOf(util.round(bitcoinManager.getDisplayRoundAmount(),bitcoinManager.getAmountInBank()))).replace("{VALUE}", bitcoinManager.getExchangeCurrencySymbol() + bitcoinManager.getBitcoinValue()).replace("{TAX}", bitcoinManager.getPurchaseTaxPercentage() + "%"));
                     sendCancelButton(player);
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            if (playersBuying.contains(player)) {
-                                player.performCommand("bitcoin cancel");
-                            }
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        if (playersBuying.contains(player)) {
+                            player.performCommand("bitcoin cancel");
                         }
-                    }.runTaskLater(plugin, 300);
+                    }, 300);
                 }
             } else if (event.getSlot() == 13) {
                 if (!player.hasPermission("bitcoin.gui.sell")) { player.sendMessage(messages.getMessage("no_permission")); }
@@ -185,14 +175,11 @@ class BitcoinMenu implements Listener {
                     playersExchanging.add(player);
                     player.sendMessage(messages.getMessage("begin_exchange").replace("{BALANCE}", String.valueOf(bitcoinManager.getBalance(player.getUniqueId()))).replace("{VALUE}", bitcoinManager.getExchangeCurrencySymbol() + bitcoinManager.getBitcoinValue()));
                     sendCancelButton(player);
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            if (playersExchanging.contains(player)) {
-                                player.performCommand("bitcoin cancel");
-                            }
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        if (playersExchanging.contains(player)) {
+                            player.performCommand("bitcoin cancel");
                         }
-                    }.runTaskLater(plugin, 300);
+                    }, 300);
                 }
             } else if (event.getSlot() == 14) {
                 if (!player.hasPermission("bitcoin.gui.mine")) { player.sendMessage(messages.getMessage("no_permission")); }
