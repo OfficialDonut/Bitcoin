@@ -18,9 +18,8 @@ import java.util.*;
 
 class Mining implements Listener {
 
-    private Bitcoin plugin;
+    private Bitcoin plugin = Bitcoin.plugin;
     private Util util;
-    private Messages messages;
     private Sounds sounds;
     private BitcoinManager bitcoinManager;
     private ItemStack resetButton;
@@ -45,13 +44,10 @@ class Mining implements Listener {
     private BukkitTask rewardTask;
     private Random random = new Random();
 
-    Mining(Bitcoin pluginInstance) {
-        plugin = pluginInstance;
+    Mining() {
         util = plugin.getUtil();
         bitcoinManager = plugin.getBitcoinManager();
-        messages = plugin.getMessages();
         sounds = plugin.getSounds();
-
         reload();
         generateNewPuzzle();
         startTimers();
@@ -59,7 +55,7 @@ class Mining implements Listener {
 
     void reload() {
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (player.getOpenInventory().getTitle().equalsIgnoreCase(messages.getMessage("mining_menu_title"))) { player.closeInventory(); }
+            if (player.getOpenInventory().getTitle().equalsIgnoreCase(Message.MINING_MENU_TITLE.toString())) { player.closeInventory(); }
         }
         miningInterfaces.clear();
         coloredGlass.clear();
@@ -70,21 +66,19 @@ class Mining implements Listener {
         minReward = plugin.getBitcoinConfig().getDouble("min_mining_reward");
         maxReward = plugin.getBitcoinConfig().getDouble("max_mining_reward");
         newPuzzleDelay = plugin.getBitcoinConfig().getLong("new_mining_puzzle_delay");
-        resetButton = util.createItemStack(Material.TNT, (short) 0, messages.getMessage("reset_item_name"), messages.getMessage("reset_item_lore"));
-        solveButton = util.createItemStack(Material.SLIME_BALL, (short) 0, messages.getMessage("solve_item_name"), messages.getMessage("solve_item_lore"));
-        exitButton = util.createItemStack(Material.BARRIER, (short) 0, messages.getMessage("exit_item_name"), messages.getMessage("exit_item_lore"));
-        plainGlassPane = util.createItemStack(Material.THIN_GLASS, (short) 0, " ", null);
-        String[] glassNames = {messages.getMessage("white_tile"), messages.getMessage("orange_tile"), messages.getMessage("magenta_tile"), messages.getMessage("light_blue_tile"), messages.getMessage("yellow_tile"),
-                messages.getMessage("lime_tile"), messages.getMessage("pink_tile"), messages.getMessage("gray_tile"), messages.getMessage("light_gray_tile"), messages.getMessage("cyan_tile"), messages.getMessage("purple_tile"),
-                messages.getMessage("blue_tile"), messages.getMessage("brown_tile"), messages.getMessage("green_tile"), messages.getMessage("red_tile"), messages.getMessage("black_tile")};
-        for (short i = 0; i < 16; i++) { coloredGlass.add(util.createItemStack(Material.STAINED_GLASS_PANE, i, glassNames[i], null)); }
-
-        for (int i = 0; i < 44; i++) {
-            if (i % 2 == 0) {
-                numberedGlass.add(util.createItemStackWithAmount(Material.STAINED_GLASS_PANE, i + 1, (short) 11, ChatColor.translateAlternateColorCodes('&', "&9&l") + (i + 1), null));
-            } else {
-                numberedGlass.add(util.createItemStackWithAmount(Material.STAINED_GLASS_PANE, i + 1, (short) 14, ChatColor.translateAlternateColorCodes('&', "&9&l") + (i + 1), null));
-            }
+        resetButton = util.createItemStack(Material.TNT, (short) 0, Message.RESET_ITEM_NAME.toString(), Message.RESET_ITEM_LORE.toString());
+        solveButton = util.createItemStack(Material.SLIME_BALL, (short) 0, Message.SOLVE_ITEM_NAME.toString(), Message.SOLVE_ITEM_LORE.toString());
+        exitButton = util.createItemStack(Material.BARRIER, (short) 0, Message.EXIT_ITEM_NAME.toString(), Message.EXIT_ITEM_LORE.toString());
+        String[] glassNames = {Message.WHITE_TILE.toString(), Message.ORANGE_TILE.toString(), Message.MAGENTA_TILE.toString(), Message.LIGHT_BLUE_TILE.toString(), Message.YELLOW_TILE.toString(),
+                Message.LIME_TILE.toString(), Message.PINK_TILE.toString(), Message.GRAY_TILE.toString(),Message.LIGHT_GRAY_TILE.toString(), Message.CYAN_TILE.toString(), Message.PURPLE_TILE.toString(),
+                Message.BLUE_TILE.toString(), Message.BROWN_TILE.toString(), Message.GREEN_TILE.toString(), Message.RED_TILE.toString(), Message.BLACK_TILE.toString()};
+        if (!Bukkit.getVersion().contains("1.13")) {
+            plainGlassPane = util.createItemStack(Material.THIN_GLASS, (short) 0, " ", null);
+            for (short i = 0; i < 16; i++) { coloredGlass.add(util.createItemStack(Material.STAINED_GLASS_PANE, i, glassNames[i], null)); }
+            for (int i = 0; i < 44; i++) { numberedGlass.add(util.createItemStackWithAmount(Material.STAINED_GLASS_PANE, i + 1, i % 2 == 0 ? (short) 11 : (short) 14, ChatColor.translateAlternateColorCodes('&', "&9&l") + (i + 1), null)); }
+        } else {
+            plainGlassPane = util.createItemStack(Material.valueOf("GLASS_PANE"), (short) 0, " ", null);
+            for (short i = 0; i < 16; i++) { coloredGlass.add(util.createItemStack(util.getGlass(i), (short) 0, glassNames[i], null)); }
         }
     }
 
@@ -93,7 +87,7 @@ class Mining implements Listener {
             if (!miningInterfaces.containsKey(player)) { createInterface(player); }
             player.openInventory(miningInterfaces.get(player));
         } else {
-            player.sendMessage(messages.getMessage("generating_puzzle"));
+            player.sendMessage(Message.GENERATING_PUZZLE.toString());
         }
     }
 
@@ -101,19 +95,17 @@ class Mining implements Listener {
         if (puzzleDifficulty.equalsIgnoreCase("easy")) {
             moveableSlots = new Integer[]{0, 1, 2, 3, 9, 10, 11, 12, 18, 19, 20, 21, 27, 28, 29};
             List<Integer> glassColors = new ArrayList<>(Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15));
-            for (int i : moveableSlots) {
+            Arrays.stream(moveableSlots).forEach(slot -> {
                 int color = glassColors.get(random.nextInt(glassColors.size()));
-                puzzleAnswer.put(i, (short) color);
+                puzzleAnswer.put(slot, (short) color);
                 glassColors.remove(glassColors.indexOf(color));
-            }
+            });
             puzzleGenerator = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
                 List<Integer> randomizedSlots = getRandomArrangement();
                 if (randomizedSlots != null) {
                     int i = 0;
                     for (int slot : moveableSlots) { initialArrangement.put(slot, puzzleAnswer.get(randomizedSlots.get(i))); i++; }
-                    for (Player player : Bukkit.getOnlinePlayers()) {
-                        player.sendMessage(messages.getMessage("generated_puzzle"));
-                    }
+                    Bukkit.getOnlinePlayers().forEach(player -> player.sendMessage(Message.GENERATED_PUZZLE.toString()));
                     puzzleGenerator.cancel();
                 }
             },0, 1);
@@ -125,12 +117,8 @@ class Mining implements Listener {
             puzzleGenerator = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
                 List<ItemStack> randomizedSlots = getRandomHardArrangement();
                 if (randomizedSlots != null && arrangementHasNoDuplicates(randomizedSlots)) {
-                    for (int slot = 0; slot < randomizedSlots.size(); slot++) {
-                        hardInitialArrangement.put(slot, randomizedSlots.get(slot));
-                    }
-                    for (Player player : Bukkit.getOnlinePlayers()) {
-                        player.sendMessage(messages.getMessage("generated_puzzle"));
-                    }
+                    for (int slot = 0; slot < randomizedSlots.size(); slot++) { hardInitialArrangement.put(slot, randomizedSlots.get(slot)); }
+                    Bukkit.getOnlinePlayers().forEach(player -> player.sendMessage(Message.GENERATED_PUZZLE.toString()));
                     puzzleGenerator.cancel();
                 }
             },0, 1);
@@ -163,11 +151,11 @@ class Mining implements Listener {
         List<ItemStack> numberedGlassCopy = new ArrayList<>(numberedGlass);
         List<ItemStack> randomizedSlots = new ArrayList<>();
 
-        for (int i = 0; i < moveableSlots.length; i++) {
+        Arrays.stream(moveableSlots).forEach(slot -> {
             ItemStack glass = numberedGlassCopy.get(random.nextInt(numberedGlassCopy.size()));
             numberedGlassCopy.remove(glass);
             randomizedSlots.add(glass);
-        }
+        });
 
         int inversions = 0;
         for (ItemStack i : randomizedSlots) {
@@ -190,10 +178,10 @@ class Mining implements Listener {
             if (temp.contains(itemStack.getAmount())) {
                 for (int i = 0; i < 44; i++) {
                     numberedGlass.clear();
-                    if (i % 2 == 0) {
-                        numberedGlass.add(util.createItemStackWithAmount(Material.STAINED_GLASS_PANE, i + 1, (short) 11, ChatColor.translateAlternateColorCodes('&', "&9&l") + (i + 1), null));
+                    if (!Bukkit.getVersion().contains("1.13")) {
+                        numberedGlass.add(util.createItemStackWithAmount(Material.STAINED_GLASS_PANE, i + 1, i % 2 == 0 ? (short) 11 : (short) 14, ChatColor.translateAlternateColorCodes('&', "&9&l") + (i + 1), null));
                     } else {
-                        numberedGlass.add(util.createItemStackWithAmount(Material.STAINED_GLASS_PANE, i + 1, (short) 14, ChatColor.translateAlternateColorCodes('&', "&9&l") + (i + 1), null));
+                        numberedGlass.add(util.createItemStackWithAmount(i % 2 == 0 ? Material.valueOf("BLUE_STAINED_GLASS_PANE") : Material.valueOf("BLUE_STAINED_GLASS_PANE"), i + 1, (short) 0, ChatColor.translateAlternateColorCodes('&', "&9&l") + (i + 1), null));
                     }
                 }
                 return false;
@@ -204,29 +192,19 @@ class Mining implements Listener {
     }
 
     private void createInterface(Player player) {
-        Inventory miningInterface = Bukkit.createInventory(null, 54, messages.getMessage("mining_menu_title"));
+        Inventory miningInterface = Bukkit.createInventory(null, 54, Message.MINING_MENU_TITLE.toString());
         miningInterface.setItem(48, resetButton);
         miningInterface.setItem(49, solveButton);
         miningInterface.setItem(50, exitButton);
         if (puzzleDifficulty.equalsIgnoreCase("easy")) {
             miningInterface.setItem(30, null);
-            for (int slot : new int[]{4, 13, 22, 31, 40, 39, 38, 37, 36, 41, 42, 43, 44}) {
-                miningInterface.setItem(slot, plainGlassPane);
-            }
-            for (int slot : immovableSlots) {
-                miningInterface.setItem(slot, coloredGlass.get(puzzleAnswer.get(slot - 5)));
-            }
-            for (int slot : moveableSlots) {
-                miningInterface.setItem(slot, coloredGlass.get(initialArrangement.get(slot)));
-            }
+            Arrays.stream(new int[]{4, 13, 22, 31, 40, 39, 38, 37, 36, 41, 42, 43, 44}).forEach(slot -> miningInterface.setItem(slot, plainGlassPane));
+            Arrays.stream(immovableSlots).forEach(slot -> miningInterface.setItem(slot, coloredGlass.get(puzzleAnswer.get(slot - 5))));
+            Arrays.stream(moveableSlots).forEach(slot -> miningInterface.setItem(slot, coloredGlass.get(initialArrangement.get(slot))));
         } else {
             miningInterface.setItem(45, null);
-            for (int slot : new int[]{45, 46, 47, 51, 52, 53}) {
-                miningInterface.setItem(slot, plainGlassPane);
-            }
-            for (int slot : moveableSlots) {
-                miningInterface.setItem(slot, hardInitialArrangement.get(slot));
-            }
+            Arrays.stream(new int[]{45, 46, 47, 51, 52, 53}).forEach(slot -> miningInterface.setItem(slot, plainGlassPane));
+            Arrays.stream(moveableSlots).forEach(slot -> miningInterface.setItem(slot, hardInitialArrangement.get(slot)));
         }
         miningInterfaces.put(player, miningInterface);
     }
@@ -234,8 +212,14 @@ class Mining implements Listener {
     private Boolean puzzleIsSolved(Inventory miningInterface) {
         if (puzzleDifficulty.equalsIgnoreCase("easy")) {
             for (int slot : moveableSlots) {
-                if (miningInterface.getItem(slot) == null || miningInterface.getItem(slot).getDurability() != puzzleAnswer.get(slot)) {
-                    return false;
+                if (!Bukkit.getVersion().contains("1.13")) {
+                    if (miningInterface.getItem(slot) == null || miningInterface.getItem(slot).getDurability() != puzzleAnswer.get(slot)) {
+                        return false;
+                    }
+                } else {
+                    if (miningInterface.getItem(slot) == null || miningInterface.getItem(slot).getType() != util.getGlass(puzzleAnswer.get(slot))) {
+                        return false;
+                    }
                 }
             }
         } else {
@@ -292,15 +276,15 @@ class Mining implements Listener {
     private void startTimers() {
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             if (!initialArrangement.isEmpty() || !hardInitialArrangement.isEmpty()) {
-                for (Player player : plugin.getServer().getOnlinePlayers()) {
-                    if (player.getOpenInventory() != null && player.getOpenInventory().getTitle() != null && player.getOpenInventory().getTitle().equalsIgnoreCase(messages.getMessage("mining_menu_title"))) {
+                Bukkit.getOnlinePlayers().forEach(player -> {
+                    if (player.getOpenInventory() != null && player.getOpenInventory().getTitle() != null && player.getOpenInventory().getTitle().equalsIgnoreCase(Message.MINING_MENU_TITLE.toString())) {
                         if (timers.containsKey(player)) {
                             timers.put(player, timers.get(player) + 1L);
                         } else {
                             timers.put(player, 1L);
                         }
                     }
-                }
+                });
             }
         }, 0, 20);
     }
@@ -308,43 +292,35 @@ class Mining implements Listener {
     @EventHandler
     @SuppressWarnings("unused")
     public void onQuit(PlayerQuitEvent event) {
-        if (miningInterfaces.containsKey(event.getPlayer())) {
-            miningInterfaces.remove(event.getPlayer());
-        }
-        if (timers.containsKey(event.getPlayer())) {
-            timers.remove(event.getPlayer());
-        }
+        miningInterfaces.remove(event.getPlayer());
+        timers.remove(event.getPlayer());
     }
 
     @EventHandler
     @SuppressWarnings("unused")
     public void onDragInGUI(InventoryDragEvent event) {
-        if (event.getInventory().getName() != null && event.getInventory().getName().equalsIgnoreCase(messages.getMessage("mining_menu_title"))) { event.setCancelled(true); }
+        if (event.getInventory().getName() != null && event.getInventory().getName().equalsIgnoreCase(Message.MINING_MENU_TITLE.toString())) { event.setCancelled(true); }
     }
 
     @EventHandler
     @SuppressWarnings("unused")
     public void onMoveInGUI(InventoryMoveItemEvent event) {
-        if (event.getDestination().getName() != null && event.getDestination().getName().equalsIgnoreCase(messages.getMessage("mining_menu_title"))) { event.setCancelled(true); }
+        if (event.getDestination().getName() != null && event.getDestination().getName().equalsIgnoreCase(Message.MINING_MENU_TITLE.toString())) { event.setCancelled(true); }
     }
 
     @EventHandler
     @SuppressWarnings("unused")
     public void onInventoryClick(InventoryClickEvent event) {
-        if (event.getInventory().getName().equalsIgnoreCase(messages.getMessage("mining_menu_title"))) {
+        if (event.getInventory().getName().equalsIgnoreCase(Message.MINING_MENU_TITLE.toString())) {
             event.setCancelled(true);
             Player player = (Player) event.getWhoClicked();
             if (event.getSlot() == 48) {
                 player.playSound(player.getLocation(), sounds.getSound("reset_tiles"), 1, 1);
                 if (puzzleDifficulty.equalsIgnoreCase("easy")) {
-                    for (int slot : moveableSlots) {
-                        event.getInventory().setItem(slot, coloredGlass.get(initialArrangement.get(slot)));
-                    }
+                    Arrays.stream(moveableSlots).forEach(slot -> event.getInventory().setItem(slot, coloredGlass.get(initialArrangement.get(slot))));
                     event.getInventory().setItem(30, null);
                 } else {
-                    for (int slot : moveableSlots) {
-                        event.getInventory().setItem(slot, hardInitialArrangement.get(slot));
-                    }
+                    Arrays.stream(moveableSlots).forEach(slot -> event.getInventory().setItem(slot, hardInitialArrangement.get(slot)));
                     event.getInventory().setItem(44, null);
                 }
             } else if (event.getSlot() == 49) {
@@ -364,13 +340,17 @@ class Mining implements Listener {
                     if (timers.get(player) < bitcoinManager.getBestPuzzleTime(player.getUniqueId()) || bitcoinManager.getBestPuzzleTime(player.getUniqueId()) == 0L) {
                         bitcoinManager.setBestPuzzleTime(player.getUniqueId(), timers.get(player));
                     }
-                    player.sendMessage(messages.getMessage("reward").replace("{REWARD}", String.valueOf(reward)));
-                    for (Player loopPlayer : Bukkit.getOnlinePlayers()) {
-                        if (loopPlayer.getOpenInventory().getTitle().equalsIgnoreCase(messages.getMessage("mining_menu_title"))) { loopPlayer.closeInventory(); }
-                        loopPlayer.sendMessage(messages.getMessage("solved").replace("{SOLVER}", player.getDisplayName()).replace("{REWARD}", String.valueOf(reward)).replace("{MIN}", String.valueOf(timers.get(player) / 60.0).split("\\.")[0]).replace("{SEC}", String.valueOf(timers.get(player) % 60)));
-                        loopPlayer.sendMessage(messages.getMessage("generating_puzzle"));
+                    player.sendMessage(Message.REWARD.toString().replace("{REWARD}", String.valueOf(reward)));
+
+                    Bukkit.getOnlinePlayers().forEach(loopPlayer -> {
+                        if (loopPlayer.getOpenInventory().getTitle().equalsIgnoreCase(Message.MINING_MENU_TITLE.toString())) { loopPlayer.closeInventory(); }
+                        loopPlayer.sendMessage(Message.SOLVED.toString().replace("{SOLVER}", player.getDisplayName())
+                                .replace("{REWARD}", String.valueOf(reward))
+                                .replace("{MIN}", String.valueOf(timers.get(player) / 60.0).split("\\.")[0])
+                                .replace("{SEC}", String.valueOf(timers.get(player) % 60)));
+                        loopPlayer.sendMessage(Message.GENERATING_PUZZLE.toString());
                         loopPlayer.playSound(loopPlayer.getLocation(), sounds.getSound("puzzle_solved"), 1, 1);
-                    }
+                    });
                     timers.clear();
                     initialArrangement.clear();
                     hardInitialArrangement.clear();

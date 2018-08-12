@@ -9,32 +9,27 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 
 class ServerEconomy {
 
-    private Bitcoin plugin;
+    private Bitcoin plugin = Bitcoin.plugin;
     private Economy economy;
     private Boolean usePlayerPoints;
     private Boolean usePointsAPI;
     private PlayerPointsAPI playerPointsAPI;
 
-    ServerEconomy(Bitcoin pluginInstance) {
-        plugin = pluginInstance;
+    ServerEconomy() {
         RegisteredServiceProvider<Economy> economyProvider = plugin.getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
         if (economyProvider != null) { economy = economyProvider.getProvider(); }
         reload();
     }
 
     Boolean hasEconomy() {
-        if (economy != null) {
-            return true;
-        } else {
-            return usePlayerPoints;
-        }
+        return economy != null ? true : usePlayerPoints;
     }
 
     void reload() {
         usePointsAPI = plugin.getBitcoinConfig().getBoolean("use_pointsapi");
         usePlayerPoints = plugin.getBitcoinConfig().getBoolean("use_playerpoints");
         if (usePlayerPoints) {
-            playerPointsAPI = PlayerPoints.class.cast(plugin.getServer().getPluginManager().getPlugin("PlayerPoints")).getAPI();
+            playerPointsAPI = ((PlayerPoints) plugin.getServer().getPluginManager().getPlugin("PlayerPoints")).getAPI();
         }
     }
 

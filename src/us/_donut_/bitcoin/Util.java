@@ -21,50 +21,18 @@ import java.util.*;
 
 class Util {
 
-    private Bitcoin plugin;
+    private Bitcoin plugin = Bitcoin.plugin;
     private Map<UUID, String> skullTextures = new HashMap<>();
     private NumberFormat numberFormat = NumberFormat.getInstance(Locale.US);
-    private Map<UUID, OfflinePlayer> uuidOfflinePlayerMap = new HashMap<>();
+    private Map<UUID, OfflinePlayer> uuidOfflinePlayerCache = new HashMap<>();
+    private Map<UUID, Long> lastPlayedCache = new HashMap<>();
 
-    Util(Bitcoin pluginInstance) {
-        plugin = pluginInstance;
-    }
-
-    void saveYml(File file, YamlConfiguration config) {
+    synchronized void saveYml(File file, YamlConfiguration config) {
         try {
             config.save(file);
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    void loadConfigDefaults() {
-        YamlConfiguration bitcoinConfig = plugin.getBitcoinConfig();
-        bitcoinConfig.addDefault("amount_in_bank", 0);
-        bitcoinConfig.addDefault("bitcoin_display_rounding", 5);
-        bitcoinConfig.addDefault("bitcoin_max_value", -1);
-        bitcoinConfig.addDefault("bitcoin_min_value", 0);
-        bitcoinConfig.addDefault("bitcoin_value", 1000);
-        bitcoinConfig.addDefault("broadcast_balance_reset_message", true);
-        bitcoinConfig.addDefault("broadcast_real_value", true);
-        bitcoinConfig.addDefault("circulation_limit", -1);
-        bitcoinConfig.addDefault("days_of_inactivity_until_balance_reset", 30);
-        bitcoinConfig.addDefault("exchange_currency_symbol", "$");
-        bitcoinConfig.addDefault("fluctuation_frequency", "6:00");
-        bitcoinConfig.addDefault("max_bitcoin_value_fluctuation", 100);
-        bitcoinConfig.addDefault("max_mining_reward", 50);
-        bitcoinConfig.addDefault("min_bitcoin_value_fluctuation", 0);
-        bitcoinConfig.addDefault("min_mining_reward", 10);
-        bitcoinConfig.addDefault("new_mining_puzzle_delay", 0);
-        bitcoinConfig.addDefault("purchase_tax_percentage", 15);
-        bitcoinConfig.addDefault("puzzle_difficulty", "easy");
-        bitcoinConfig.addDefault("use_playerpoints", false);
-        bitcoinConfig.addDefault("use_pointsapi", false);
-        bitcoinConfig.addDefault("use_real_value", false);
-        bitcoinConfig.addDefault("world", "world");
-
-        bitcoinConfig.options().copyDefaults(true);
-        saveYml(plugin.getConfigFile(), bitcoinConfig);
     }
 
     ItemStack createItemStack(Material item, Short dataValue, String name, String lore) {
@@ -87,7 +55,12 @@ class Util {
 
     @SuppressWarnings("deprecation")
     ItemStack getSkull(UUID playerUUID, String playerName, String displayName, String lore) {
-        ItemStack skull = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
+        ItemStack skull;
+        if (!Bukkit.getVersion().contains("1.13")) {
+            skull = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
+        } else {
+            skull = new ItemStack(Material.valueOf("PLAYER_HEAD"), 1);
+        }
         if (plugin.getServer().getOnlineMode()) {
             if (!skullTextures.containsKey(playerUUID)) {
                 try {
@@ -98,6 +71,7 @@ class Util {
                     skullTextures.put(playerUUID, sourceLine.split("\"")[17]);
                     UUID hashAsId = new UUID(skullTextures.get(playerUUID).hashCode(), skullTextures.get(playerUUID).hashCode());
                     skull = Bukkit.getUnsafe().modifyItemStack(skull, "{SkullOwner:{Id:\"" + hashAsId + "\",Properties:{textures:[{Value:\"" + skullTextures.get(playerUUID) + "\"}]}}}");
+                    source.close();
                 } catch (IOException e) {
                     SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();
                     skullMeta.setOwner(playerName);
@@ -116,6 +90,45 @@ class Util {
         skullMeta.setLore(Arrays.asList(multiLineLore));
         skull.setItemMeta(skullMeta);
         return skull;
+    }
+
+    Material getGlass(int dataValue) {
+        switch (dataValue) {
+            case 0:
+                return Material.valueOf("WHITE_STAINED_GLASS_PANE");
+            case 1:
+                return Material.valueOf("ORANGE_STAINED_GLASS_PANE");
+            case 2:
+                return Material.valueOf("MAGENTA_STAINED_GLASS_PANE");
+            case 3:
+                return Material.valueOf("LIGHT_BLUE_STAINED_GLASS_PANE");
+            case 4:
+                return Material.valueOf("YELLOW_STAINED_GLASS_PANE");
+            case 5:
+                return Material.valueOf("LIME_STAINED_GLASS_PANE");
+            case 6:
+                return Material.valueOf("PINK_STAINED_GLASS_PANE");
+            case 7:
+                return Material.valueOf("GRAY_STAINED_GLASS_PANE");
+            case 8:
+                return Material.valueOf("LIGHT_GRAY_STAINED_GLASS_PANE");
+            case 9:
+                return Material.valueOf("CYAN_STAINED_GLASS_PANE");
+            case 10:
+                return Material.valueOf("PURPLE_STAINED_GLASS_PANE");
+            case 11:
+                return Material.valueOf("BLUE_STAINED_GLASS_PANE");
+            case 12:
+                return Material.valueOf("BROWN_STAINED_GLASS_PANE");
+            case 13:
+                return Material.valueOf("GREEN_STAINED_GLASS_PANE");
+            case 14:
+                return Material.valueOf("RED_STAINED_GLASS_PANE");
+            case 15:
+                return Material.valueOf("BLACK_STAINED_GLASS_PANE");
+            default:
+                return null;
+        }
     }
 
     String colorMessage(String message) {
@@ -137,6 +150,14 @@ class Util {
         }
     }
 
+    String formatRoundNumber(Number number) {
+        return formatNumber(round(plugin.getBitcoinManager().getDisplayRoundAmount(), number.doubleValue()));
+    }
+
+    String formatRound2Number(Number number) {
+        return formatNumber(round(2, number.doubleValue()));
+    }
+
     Long getTicksFromTime(String time) {
         int hours;
         int minutes;
@@ -150,7 +171,11 @@ class Util {
         return (long) (((18001 + (hours * 1000) + ((minutes / 60.0) * 1000))) % 24000);
     }
 
-    Map<UUID, OfflinePlayer> getUUIDOfflinePlayerMap() {
-        return uuidOfflinePlayerMap;
+    Map<UUID, OfflinePlayer> getUUIDOfflinePlayerCache() {
+        return uuidOfflinePlayerCache;
+    }
+
+    Map<UUID, Long> getLastPlayedCache() {
+        return lastPlayedCache;
     }
 }

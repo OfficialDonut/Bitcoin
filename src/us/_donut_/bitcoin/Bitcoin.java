@@ -17,13 +17,15 @@ public class Bitcoin extends JavaPlugin {
     private File blackMarketFile;
     private YamlConfiguration blackMarketConfig;
     private ServerEconomy economy;
-    private Messages messages;
     private Sounds sounds;
     private static BitcoinAPI api;
+    static Bitcoin plugin;
 
     @Override
     public void onEnable() {
-        util = new Util(this);
+        plugin = this;
+        util = new Util();
+
         configFile = new File(getDataFolder(), "config.yml");
         bitcoinConfig = YamlConfiguration.loadConfiguration(configFile);
         if (!configFile.exists()) { getLogger().info("Generated config.yml!"); }
@@ -31,19 +33,24 @@ public class Bitcoin extends JavaPlugin {
         blackMarketConfig = YamlConfiguration.loadConfiguration(blackMarketFile);
         if (!blackMarketFile.exists()) { util.saveYml(blackMarketFile, blackMarketConfig); getLogger().info("Generated black_market.yml!"); }
         if (new File(getDataFolder(), "Player Data").mkdirs()) { getLogger().info("Generated player data folder!"); }
-        util.loadConfigDefaults();
-        economy = new ServerEconomy(this);
-        messages = new Messages(this);
-        sounds = new Sounds(this);
-        getServer().getPluginManager().registerEvents(bitcoinManager = new BitcoinManager(this), this);
-        getServer().getPluginManager().registerEvents(mining = new Mining(this), this);
-        getServer().getPluginManager().registerEvents(blackMarket = new BlackMarket(this), this);
-        getServer().getPluginManager().registerEvents(bitcoinMenu = new BitcoinMenu(this), this);
+        loadConfigDefaults();
+
+        economy = new ServerEconomy();
+        sounds = new Sounds();
+        Message.reload();
+
+        getServer().getPluginManager().registerEvents(bitcoinManager = new BitcoinManager(), this);
+        getServer().getPluginManager().registerEvents(mining = new Mining(), this);
+        getServer().getPluginManager().registerEvents(blackMarket = new BlackMarket(), this);
+        getServer().getPluginManager().registerEvents(bitcoinMenu = new BitcoinMenu(), this);
+
         BitcoinCommand bitcoinCommand;
-        getServer().getPluginManager().registerEvents(bitcoinCommand = new BitcoinCommand(this), this);
+        getServer().getPluginManager().registerEvents(bitcoinCommand = new BitcoinCommand(), this);
         getCommand("bitcoin").setExecutor(bitcoinCommand);
-        if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) { new RegisterPlaceholderAPI(this).hook(); }
-        if (getServer().getPluginManager().isPluginEnabled("MVdWPlaceholderAPI")) { new RegisterMVdWPlaceholderAPI(this); }
+
+        if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) { new RegisterPlaceholderAPI().hook(); }
+        if (getServer().getPluginManager().isPluginEnabled("MVdWPlaceholderAPI")) { new RegisterMVdWPlaceholderAPI(); }
+
         api = new BitcoinAPI(this);
         getLogger().info("Enabled!");
     }
@@ -53,10 +60,38 @@ public class Bitcoin extends JavaPlugin {
         getLogger().info("Disabled!");
     }
 
+    private void loadConfigDefaults() {
+        YamlConfiguration bitcoinConfig = getBitcoinConfig();
+        bitcoinConfig.addDefault("amount_in_bank", 0);
+        bitcoinConfig.addDefault("bitcoin_display_rounding", 5);
+        bitcoinConfig.addDefault("bitcoin_max_value", -1);
+        bitcoinConfig.addDefault("bitcoin_min_value", 0);
+        bitcoinConfig.addDefault("bitcoin_value", 1000);
+        bitcoinConfig.addDefault("broadcast_balance_reset_message", true);
+        bitcoinConfig.addDefault("broadcast_real_value", true);
+        bitcoinConfig.addDefault("circulation_limit", -1);
+        bitcoinConfig.addDefault("days_of_inactivity_until_balance_reset", 30);
+        bitcoinConfig.addDefault("exchange_currency_symbol", "$");
+        bitcoinConfig.addDefault("fluctuation_frequency", "6:00");
+        bitcoinConfig.addDefault("max_bitcoin_value_fluctuation", 100);
+        bitcoinConfig.addDefault("max_mining_reward", 50);
+        bitcoinConfig.addDefault("min_bitcoin_value_fluctuation", 0);
+        bitcoinConfig.addDefault("min_mining_reward", 10);
+        bitcoinConfig.addDefault("new_mining_puzzle_delay", 0);
+        bitcoinConfig.addDefault("purchase_tax_percentage", 15);
+        bitcoinConfig.addDefault("puzzle_difficulty", "easy");
+        bitcoinConfig.addDefault("use_playerpoints", false);
+        bitcoinConfig.addDefault("use_pointsapi", false);
+        bitcoinConfig.addDefault("use_real_value", false);
+        bitcoinConfig.addDefault("world", "world");
+        bitcoinConfig.options().copyDefaults(true);
+        util.saveYml(getConfigFile(), bitcoinConfig);
+    }
+
     void reload() {
+        Message.reload();
         configFile = new File(getDataFolder(), "config.yml");
         bitcoinConfig = YamlConfiguration.loadConfiguration(configFile);
-        messages.reload();
         sounds.reload();
         economy.reload();
         bitcoinMenu.reload();
@@ -75,7 +110,6 @@ public class Bitcoin extends JavaPlugin {
     YamlConfiguration getBitcoinConfig() { return bitcoinConfig; }
     File getBlackMarketFile() { return blackMarketFile; }
     YamlConfiguration getBlackMarketConfig() { return blackMarketConfig; }
-    Messages getMessages() { return messages; }
     Sounds getSounds() { return sounds; }
 
     public static BitcoinAPI getAPI() { return api; }

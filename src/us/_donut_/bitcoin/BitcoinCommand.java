@@ -15,23 +15,20 @@ import java.util.List;
 
 class BitcoinCommand implements CommandExecutor, Listener {
 
-    private Bitcoin plugin;
+    private Bitcoin plugin = Bitcoin.plugin;
     private Util util;
     private BitcoinManager bitcoinManager;
     private BitcoinMenu bitcoinMenu;
     private BlackMarket blackMarket;
     private Mining mining;
-    private Messages messages;
     private Sounds sounds;
 
-    BitcoinCommand(Bitcoin pluginInstance) {
-        plugin = pluginInstance;
+    BitcoinCommand() {
         util = plugin.getUtil();
         bitcoinManager = plugin.getBitcoinManager();
         bitcoinMenu = plugin.getBitcoinMenu();
         blackMarket = plugin.getBlackMarket();
         mining = plugin.getMining();
-        messages = plugin.getMessages();
         sounds = plugin.getSounds();
     }
 
@@ -40,307 +37,332 @@ class BitcoinCommand implements CommandExecutor, Listener {
         if (cmd.getName().equalsIgnoreCase("bitcoin")) {
 
             if (args.length == 0) {
-                if (sender instanceof ConsoleCommandSender) { sender.sendMessage(messages.getMessage("cannot_use_from_console")); return true; }
+                if (sender instanceof ConsoleCommandSender) { sender.sendMessage(Message.CANNOT_USE_FROM_CONSOLE.toString()); return true; }
                 Player player = (Player) sender;
-                if (!player.hasPermission("bitcoin.main")) { player.sendMessage(messages.getMessage("no_permission")); return true; }
+                if (!player.hasPermission("bitcoin.main")) { player.sendMessage(Message.NO_PERMISSION.toString()); return true; }
                 plugin.getBitcoinMenu().open(player);
             }
 
             else if (args[0].equalsIgnoreCase("cancel")) {
-                if (sender instanceof ConsoleCommandSender) { sender.sendMessage(messages.getMessage("cannot_use_from_console")); return true; }
+                if (sender instanceof ConsoleCommandSender) { sender.sendMessage(Message.CANNOT_USE_FROM_CONSOLE.toString()); return true; }
                 Player player = (Player) sender;
                 if (bitcoinMenu.getPlayersExchanging().contains(player)) {
                     bitcoinMenu.getPlayersExchanging().remove(player);
-                    player.sendMessage(messages.getMessage("cancelled_exchange"));
+                    player.sendMessage(Message.CANCELLED_EXCHANGE.toString());
                     player.playSound(player.getLocation(), sounds.getSound("cancelled_exchange"), 1, 1);
                 } else if (bitcoinMenu.getPlayersTransferring().contains(player)) {
                     bitcoinMenu.getPlayersTransferring().remove(player);
-                    player.sendMessage(messages.getMessage("cancelled_transfer"));
+                    player.sendMessage(Message.CANCELLED_TRANSFER.toString());
                     player.playSound(player.getLocation(), sounds.getSound("cancelled_transfer"), 1, 1);
                 } else if (bitcoinMenu.getPlayersBuying().contains(player)) {
                     bitcoinMenu.getPlayersBuying().remove(player);
-                    player.sendMessage(messages.getMessage("cancelled_purchase"));
+                    player.sendMessage(Message.CANCELLED_PURCHASE.toString());
                     player.playSound(player.getLocation(), sounds.getSound("cancelled_purchase"), 1, 1);
                 } else {
-                    player.sendMessage(messages.getMessage("nothing_to_cancel"));
+                    player.sendMessage(Message.NOTHING_TO_CANCEL.toString());
                 }
             }
 
             else if (args[0].equalsIgnoreCase("help")) {
-                if (!sender.hasPermission("bitcoin.help")) { sender.sendMessage(messages.getMessage("no_permission")); return true; }
-                sender.sendMessage(messages.getMessage("help_command"));
+                if (!sender.hasPermission("bitcoin.help")) { sender.sendMessage(Message.NO_PERMISSION.toString()); return true; }
+                sender.sendMessage(Message.HELP_COMMAND.toString());
             }
 
             else if (args[0].equalsIgnoreCase("value")) {
-                if (!sender.hasPermission("bitcoin.value")) { sender.sendMessage(messages.getMessage("no_permission")); return true; }
-                sender.sendMessage(messages.getMessage("value_command").replace("{VALUE}", bitcoinManager.getExchangeCurrencySymbol() + util.formatNumber(bitcoinManager.getBitcoinValue())));
+                if (!sender.hasPermission("bitcoin.value")) { sender.sendMessage(Message.NO_PERMISSION.toString()); return true; }
+                sender.sendMessage(Message.VALUE_COMMAND.toString().replace("{VALUE}", bitcoinManager.getExchangeCurrencySymbol() + util.formatRound2Number(bitcoinManager.getBitcoinValue())));
             }
 
             else if (args[0].equalsIgnoreCase("mine")) {
-                if (sender instanceof ConsoleCommandSender) { sender.sendMessage(messages.getMessage("cannot_use_from_console")); return true; }
+                if (sender instanceof ConsoleCommandSender) { sender.sendMessage(Message.CANNOT_USE_FROM_CONSOLE.toString()); return true; }
                 Player player = (Player) sender;
-                if (!player.hasPermission("bitcoin.mine")) { player.sendMessage(messages.getMessage("no_permission")); return true; }
+                if (!player.hasPermission("bitcoin.mine")) { player.sendMessage(Message.NO_PERMISSION.toString()); return true; }
                 mining.openInterface(player);
 
             }
 
             else if (args[0].equalsIgnoreCase("stats")) {
-                if (sender instanceof ConsoleCommandSender) { sender.sendMessage(messages.getMessage("cannot_use_from_console")); return true; }
+                if (sender instanceof ConsoleCommandSender) { sender.sendMessage(Message.CANNOT_USE_FROM_CONSOLE.toString()); return true; }
                 Player player = (Player) sender;
-                if (!player.hasPermission("bitcoin.stats")) { player.sendMessage(messages.getMessage("no_permission")); return true; }
+                if (!player.hasPermission("bitcoin.stats")) { player.sendMessage(Message.NO_PERMISSION.toString()); return true; }
                 if (args.length == 1) {
-                    player.sendMessage(messages.getMessage("statistic_command_self").replace("{BALANCE}", util.formatNumber((util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBalance(player.getUniqueId()))))).replace("{AMOUNT_SOLVED}", util.formatNumber((bitcoinManager.getPuzzlesSolved(player.getUniqueId())))).replace("{AMOUNT_MINED}", util.formatNumber(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBitcoinsMined(player.getUniqueId())))).replace("{MIN}", String.valueOf(bitcoinManager.getBestPuzzleTime(player.getUniqueId()) / 60.0).split("\\.")[0]).replace("{SEC}", String.valueOf(bitcoinManager.getBestPuzzleTime(player.getUniqueId()) % 60)));
+                    player.sendMessage(Message.STATISTIC_COMMAND_SELF.toString()
+                            .replace("{BALANCE}", util.formatRoundNumber(bitcoinManager.getBalance(player.getUniqueId())))
+                            .replace("{AMOUNT_SOLVED}", util.formatNumber((bitcoinManager.getPuzzlesSolved(player.getUniqueId()))))
+                            .replace("{AMOUNT_MINED}", util.formatRoundNumber(bitcoinManager.getBitcoinsMined(player.getUniqueId())))
+                            .replace("{MIN}", String.valueOf(bitcoinManager.getBestPuzzleTime(player.getUniqueId()) / 60.0).split("\\.")[0])
+                            .replace("{SEC}", String.valueOf(bitcoinManager.getBestPuzzleTime(player.getUniqueId()) % 60)));
                 } else {
                     OfflinePlayer statPlayer = Bukkit.getOfflinePlayer(args[1]);
-                    if (!bitcoinManager.getPlayerFileConfigs().containsKey(statPlayer.getUniqueId())) { sender.sendMessage(messages.getMessage("never_joined").replace("{PLAYER}", args[1])); return true; }
-                    player.sendMessage(messages.getMessage("statistic_command_other").replace("{PLAYER}", bitcoinManager.getOfflinePlayerName(statPlayer)).replace("{BALANCE}", util.formatNumber((util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBalance(statPlayer.getUniqueId()))))).replace("{AMOUNT_SOLVED}", util.formatNumber((bitcoinManager.getPuzzlesSolved(statPlayer.getUniqueId())))).replace("{AMOUNT_MINED}", util.formatNumber(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBitcoinsMined(statPlayer.getUniqueId())))).replace("{MIN}", String.valueOf(bitcoinManager.getBestPuzzleTime(player.getUniqueId()) / 60.0).split("\\.")[0]).replace("{SEC}", String.valueOf(bitcoinManager.getBestPuzzleTime(player.getUniqueId()) % 60)));
+                    if (!bitcoinManager.getPlayerFileConfigs().containsKey(statPlayer.getUniqueId())) { sender.sendMessage(Message.NEVER_JOINED.toString().replace("{PLAYER}", args[1])); return true; }
+                    player.sendMessage(Message.STATISTIC_COMMAND_OTHER.toString()
+                            .replace("{PLAYER}", bitcoinManager.getOfflinePlayerName(statPlayer))
+                            .replace("{BALANCE}", util.formatRoundNumber(bitcoinManager.getBalance(statPlayer.getUniqueId())))
+                            .replace("{AMOUNT_SOLVED}", util.formatNumber((bitcoinManager.getPuzzlesSolved(statPlayer.getUniqueId()))))
+                            .replace("{AMOUNT_MINED}", util.formatRoundNumber(bitcoinManager.getBitcoinsMined(statPlayer.getUniqueId())))
+                            .replace("{MIN}", String.valueOf(bitcoinManager.getBestPuzzleTime(player.getUniqueId()) / 60.0).split("\\.")[0])
+                            .replace("{SEC}", String.valueOf(bitcoinManager.getBestPuzzleTime(player.getUniqueId()) % 60)));
                 }
             }
 
             else if (args[0].equalsIgnoreCase("sell")) {
-                if (sender instanceof ConsoleCommandSender) { sender.sendMessage(messages.getMessage("cannot_use_from_console")); return true; }
+                if (sender instanceof ConsoleCommandSender) { sender.sendMessage(Message.CANNOT_USE_FROM_CONSOLE.toString()); return true; }
                 Player player = (Player) sender;
-                if (!player.hasPermission("bitcoin.sell")) { player.sendMessage(messages.getMessage("no_permission")); return true; }
-                if (!plugin.getEconomy().hasEconomy()) { player.sendMessage(messages.getMessage("no_economy")); }
-                if (args.length < 2) { player.sendMessage(messages.getMessage("sell_command_invalid_arg")); return true; }
+                if (!player.hasPermission("bitcoin.sell")) { player.sendMessage(Message.NO_PERMISSION.toString()); return true; }
+                if (!plugin.getEconomy().hasEconomy()) { player.sendMessage(Message.NO_ECONOMY.toString()); }
+                if (args.length < 2) { player.sendMessage(Message.SELL_COMMAND_INVALID_ARG.toString()); return true; }
                 try {
                     double exchangeAmount = Double.valueOf(args[1]);
-                    if (exchangeAmount > bitcoinManager.getBalance(player.getUniqueId())) { player.sendMessage(messages.getMessage("not_enough_bitcoins").replace("{BALANCE}", util.formatNumber((util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBalance(player.getUniqueId())))))); return true; }
-                    if (exchangeAmount <= 0) { player.sendMessage(messages.getMessage("invalid_number")); return true; }
+                    if (exchangeAmount > bitcoinManager.getBalance(player.getUniqueId())) { player.sendMessage(Message.NOT_ENOUGH_BITCOINS.toString().replace("{BALANCE}", util.formatRoundNumber(bitcoinManager.getBalance(player.getUniqueId())))); return true; }
+                    if (exchangeAmount <= 0) { player.sendMessage(Message.INVALID_NUMBER.toString()); return true; }
                     bitcoinManager.withdraw(player.getUniqueId(), exchangeAmount);
                     bitcoinManager.addToBank(exchangeAmount);
-                    player.sendMessage(messages.getMessage("complete_exchange").replace("{AMOUNT}", util.formatNumber((exchangeAmount))).replace("{NEW_AMOUNT}", bitcoinManager.getExchangeCurrencySymbol() + util.formatNumber(util.round(2, bitcoinManager.getBitcoinValue() * exchangeAmount))));
+                    player.sendMessage(Message.COMPLETE_EXCHANGE.toString()
+                            .replace("{AMOUNT}", util.formatNumber((exchangeAmount)))
+                            .replace("{NEW_AMOUNT}", bitcoinManager.getExchangeCurrencySymbol() + util.formatRound2Number(bitcoinManager.getBitcoinValue() * exchangeAmount)));
                     plugin.getEconomy().depositPlayer(player, player.getWorld().getName(), bitcoinManager.getBitcoinValue() * exchangeAmount);
                 } catch (NumberFormatException e) {
-                    player.sendMessage(messages.getMessage("invalid_number"));
+                    player.sendMessage(Message.INVALID_NUMBER.toString());
                 }
             }
 
             else if (args[0].equalsIgnoreCase("transfer")) {
-                if (sender instanceof ConsoleCommandSender) { sender.sendMessage(messages.getMessage("cannot_use_from_console")); return true; }
+                if (sender instanceof ConsoleCommandSender) { sender.sendMessage(Message.CANNOT_USE_FROM_CONSOLE.toString()); return true; }
                 Player player = (Player) sender;
-                if (!player.hasPermission("bitcoin.transfer")) { player.sendMessage(messages.getMessage("no_permission")); return true; }
-                if (args.length < 3) { player.sendMessage(messages.getMessage("transfer_command_invalid_arg")); return true; }
+                if (!player.hasPermission("bitcoin.transfer")) { player.sendMessage(Message.NO_PERMISSION.toString()); return true; }
+                if (args.length < 3) { player.sendMessage(Message.TRANSFER_COMMAND_INVALID_ARG.toString()); return true; }
                 Player recipient = Bukkit.getPlayer(args[1]);
-                if (recipient == null) { player.sendMessage(messages.getMessage("not_online").replace("{PLAYER}", args[1])); return true; }
-                if (recipient.equals(player)) { player.sendMessage(messages.getMessage("cannot_transfer_to_self")); return true; }
+                if (recipient == null) { player.sendMessage(Message.NOT_ONLINE.toString().replace("{PLAYER}", args[1])); return true; }
+                if (recipient.equals(player)) { player.sendMessage(Message.CANNOT_TRANSFER_TO_SELF.toString()); return true; }
                 try {
                     double transferAmount = Double.valueOf(args[2]);
-                    if (transferAmount > bitcoinManager.getBalance(player.getUniqueId())) { player.sendMessage(messages.getMessage("not_enough_bitcoins").replace("{BALANCE}", util.formatNumber((util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBalance(player.getUniqueId())))))); return true; }
-                    if (transferAmount <= 0) { player.sendMessage(messages.getMessage("invalid_number")); return true; }
+                    if (transferAmount > bitcoinManager.getBalance(player.getUniqueId())) { player.sendMessage(Message.NOT_ENOUGH_BITCOINS.toString().replace("{BALANCE}", util.formatRoundNumber(bitcoinManager.getBalance(player.getUniqueId())))); return true; }
+                    if (transferAmount <= 0) { player.sendMessage(Message.INVALID_NUMBER.toString()); return true; }
                     bitcoinManager.withdraw(player.getUniqueId(), transferAmount);
                     bitcoinManager.deposit(recipient.getUniqueId(), transferAmount);
-                    player.sendMessage(messages.getMessage("complete_transfer").replace("{AMOUNT}", util.formatNumber((transferAmount))).replace("{RECIPIENT}", recipient.getDisplayName()));
-                    recipient.sendMessage(messages.getMessage("receive_bitcoins").replace("{AMOUNT}", util.formatNumber((transferAmount))).replace("{SENDER}", player.getDisplayName()));
+                    player.sendMessage(Message.COMPLETE_TRANSFER.toString()
+                            .replace("{AMOUNT}", util.formatNumber((transferAmount)))
+                            .replace("{RECIPIENT}", recipient.getDisplayName()));
+                    recipient.sendMessage(Message.RECEIVE_BITCOINS.toString()
+                            .replace("{AMOUNT}", util.formatNumber((transferAmount)))
+                            .replace("{SENDER}", player.getDisplayName()));
                 } catch (NumberFormatException e) {
-                    player.sendMessage(messages.getMessage("invalid_number"));
+                    player.sendMessage(Message.INVALID_NUMBER.toString());
                 }
             }
 
             else if (args[0].equalsIgnoreCase("buy")) {
-                if (sender instanceof ConsoleCommandSender) { sender.sendMessage(messages.getMessage("cannot_use_from_console")); return true; }
+                if (sender instanceof ConsoleCommandSender) { sender.sendMessage(Message.CANNOT_USE_FROM_CONSOLE.toString()); return true; }
                 Player player = (Player) sender;
-                if (!player.hasPermission("bitcoin.buy")) { player.sendMessage(messages.getMessage("no_permission")); return true; }
-                if (!plugin.getEconomy().hasEconomy()) { player.sendMessage(messages.getMessage("no_economy")); }
-                if (args.length < 2) { player.sendMessage(messages.getMessage("buy_command_invalid_arg")); return true; }
+                if (!player.hasPermission("bitcoin.buy")) { player.sendMessage(Message.NO_PERMISSION.toString()); return true; }
+                if (!plugin.getEconomy().hasEconomy()) { player.sendMessage(Message.NO_ECONOMY.toString()); }
+                if (args.length < 2) { player.sendMessage(Message.BUY_COMMAND_INVALID_ARG.toString()); return true; }
                 try {
                     double buyAmount = Double.valueOf(args[1]);
-                    if (buyAmount > bitcoinManager.getAmountInBank()) { player.sendMessage(messages.getMessage("not_enough_in_bank").replace("{AMOUNT}", util.formatNumber((util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getAmountInBank()))))); return true; }
-                    if (buyAmount <= 0) { player.sendMessage(messages.getMessage("invalid_number")); return true; }
+                    if (buyAmount > bitcoinManager.getAmountInBank()) { player.sendMessage(Message.NOT_ENOUGH_IN_BANK.toString().replace("{AMOUNT}", util.formatRoundNumber(bitcoinManager.getAmountInBank()))); return true; }
+                    if (buyAmount <= 0) { player.sendMessage(Message.INVALID_NUMBER.toString()); return true; }
                     double cost = (buyAmount * bitcoinManager.getBitcoinValue()) * (1 + bitcoinManager.getPurchaseTaxPercentage() / 100);
-                    if (cost > plugin.getEconomy().getBalance(player)) { player.sendMessage(messages.getMessage("not_enough_money")); return true; }
+                    if (cost > plugin.getEconomy().getBalance(player)) { player.sendMessage(Message.NOT_ENOUGH_MONEY.toString()); return true; }
                     bitcoinManager.deposit(player.getUniqueId(), buyAmount);
                     bitcoinManager.removeFromBank(buyAmount);
-                    player.sendMessage(messages.getMessage("complete_purchase").replace("{AMOUNT}", util.formatNumber((buyAmount))).replace("{COST}", bitcoinManager.getExchangeCurrencySymbol() + util.formatNumber(util.round(2, bitcoinManager.getBitcoinValue() * buyAmount))).replace("{TAX}", bitcoinManager.getExchangeCurrencySymbol() + util.formatNumber(util.round(2, bitcoinManager.getPurchaseTaxPercentage() / 100 * cost))));
+                    player.sendMessage(Message.COMPLETE_PURCHASE.toString()
+                            .replace("{AMOUNT}", util.formatNumber((buyAmount)))
+                            .replace("{COST}", bitcoinManager.getExchangeCurrencySymbol() + util.formatRound2Number(bitcoinManager.getBitcoinValue() * buyAmount))
+                            .replace("{TAX}", bitcoinManager.getExchangeCurrencySymbol() + util.formatRound2Number(bitcoinManager.getPurchaseTaxPercentage() / 100 * cost)));
                     plugin.getEconomy().withdrawPlayer(player, player.getWorld().getName(), cost);
                 } catch (NumberFormatException e) {
-                    player.sendMessage(messages.getMessage("invalid_number"));
+                    player.sendMessage(Message.INVALID_NUMBER.toString());
                 }
             }
 
             else if (args[0].equalsIgnoreCase("give")) {
-                if (!sender.hasPermission("bitcoin.give")) { sender.sendMessage(messages.getMessage("no_permission")); return true; }
-                if (args.length < 3) { sender.sendMessage(messages.getMessage("give_command_invalid_arg")); return true; }
+                if (!sender.hasPermission("bitcoin.give")) { sender.sendMessage(Message.NO_PERMISSION.toString()); return true; }
+                if (args.length < 3) { sender.sendMessage(Message.GIVE_COMMAND_INVALID_ARG.toString()); return true; }
                 OfflinePlayer recipient = Bukkit.getOfflinePlayer(args[1]);
-                if (!bitcoinManager.getPlayerFileConfigs().containsKey(recipient.getUniqueId())) { sender.sendMessage(messages.getMessage("never_joined").replace("{PLAYER}", args[1])); return true; }
+                if (!bitcoinManager.getPlayerFileConfigs().containsKey(recipient.getUniqueId())) { sender.sendMessage(Message.NEVER_JOINED.toString().replace("{PLAYER}", args[1])); return true; }
                 try {
                     double giveAmount = Double.valueOf(args[2]);
-                    if (giveAmount <= 0) { sender.sendMessage(messages.getMessage("invalid_number")); return true; }
-                    if (bitcoinManager.getCirculationLimit() > 0 && bitcoinManager.getBitcoinsInCirculation() + giveAmount >= bitcoinManager.getCirculationLimit()) { sender.sendMessage(messages.getMessage("exceeds_limit").replace("{LIMIT}", util.formatNumber((util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getCirculationLimit()))))); return true; }
+                    if (giveAmount <= 0) { sender.sendMessage(Message.INVALID_NUMBER.toString()); return true; }
+                    if (bitcoinManager.getCirculationLimit() > 0 && bitcoinManager.getBitcoinsInCirculation() + giveAmount >= bitcoinManager.getCirculationLimit()) { sender.sendMessage(Message.EXCEEDS_LIMIT.toString().replace("{LIMIT}", util.formatRoundNumber(bitcoinManager.getCirculationLimit()))); return true; }
                     bitcoinManager.deposit(recipient.getUniqueId(), giveAmount);
-                    sender.sendMessage(messages.getMessage("give_command").replace("{AMOUNT}", util.formatNumber((giveAmount))).replace("{PLAYER}", bitcoinManager.getOfflinePlayerName(recipient)));
+                    sender.sendMessage(Message.GIVE_COMMAND.toString().replace("{AMOUNT}", util.formatNumber((giveAmount))).replace("{PLAYER}", bitcoinManager.getOfflinePlayerName(recipient)));
                 } catch (NumberFormatException e) {
-                    sender.sendMessage(messages.getMessage("invalid_number"));
+                    sender.sendMessage(Message.INVALID_NUMBER.toString());
                 }
             }
 
             else if (args[0].equalsIgnoreCase("remove")) {
-                if (!sender.hasPermission("bitcoin.remove")) { sender.sendMessage(messages.getMessage("no_permission")); return true; }
-                if (args.length < 3) { sender.sendMessage(messages.getMessage("remove_command_invalid_arg")); return true; }
+                if (!sender.hasPermission("bitcoin.remove")) { sender.sendMessage(Message.NO_PERMISSION.toString()); return true; }
+                if (args.length < 3) { sender.sendMessage(Message.REMOVE_COMMAND_INVALID_ARG.toString()); return true; }
                 OfflinePlayer recipient = Bukkit.getOfflinePlayer(args[1]);
-                if (!bitcoinManager.getPlayerFileConfigs().containsKey(recipient.getUniqueId())) { sender.sendMessage(messages.getMessage("never_joined").replace("{PLAYER}", args[1])); return true; }
+                if (!bitcoinManager.getPlayerFileConfigs().containsKey(recipient.getUniqueId())) { sender.sendMessage(Message.NEVER_JOINED.toString().replace("{PLAYER}", args[1])); return true; }
                 try {
                     double removeAmount = Double.valueOf(args[2]);
-                    if (removeAmount > bitcoinManager.getBalance(recipient.getUniqueId())) { sender.sendMessage(messages.getMessage("other_player_not_enough_bitcoins").replace("{PLAYER}", bitcoinManager.getOfflinePlayerName(recipient)).replace("{BALANCE}", util.formatNumber((bitcoinManager.getBalance(recipient.getUniqueId()))))); return true; }
-                    if (removeAmount <= 0) { sender.sendMessage(messages.getMessage("invalid_number")); return true; }
+                    if (removeAmount > bitcoinManager.getBalance(recipient.getUniqueId())) { sender.sendMessage(Message.OTHER_PLAYER_NOT_ENOUGH_BITCOINS.toString().replace("{PLAYER}", bitcoinManager.getOfflinePlayerName(recipient)).replace("{BALANCE}", util.formatNumber((bitcoinManager.getBalance(recipient.getUniqueId()))))); return true; }
+                    if (removeAmount <= 0) { sender.sendMessage(Message.INVALID_NUMBER.toString()); return true; }
                     bitcoinManager.withdraw(recipient.getUniqueId(), removeAmount);
-                    sender.sendMessage(messages.getMessage("remove_command").replace("{AMOUNT}", util.formatNumber((removeAmount))).replace("{PLAYER}", bitcoinManager.getOfflinePlayerName(recipient)));
+                    sender.sendMessage(Message.REMOVE_COMMAND.toString().replace("{AMOUNT}", util.formatNumber((removeAmount))).replace("{PLAYER}", bitcoinManager.getOfflinePlayerName(recipient)));
                 } catch (NumberFormatException e) {
-                    sender.sendMessage(messages.getMessage("invalid_number"));
+                    sender.sendMessage(Message.INVALID_NUMBER.toString());
                 }
             }
 
             else if (args[0].equalsIgnoreCase("set")) {
-                if (!sender.hasPermission("bitcoin.set")) { sender.sendMessage(messages.getMessage("no_permission")); return true; }
-                if (args.length < 3) { sender.sendMessage(messages.getMessage("set_command_invalid_arg")); return true; }
+                if (!sender.hasPermission("bitcoin.set")) { sender.sendMessage(Message.NO_PERMISSION.toString()); return true; }
+                if (args.length < 3) { sender.sendMessage(Message.SET_COMMAND_INVALID_ARG.toString()); return true; }
                 OfflinePlayer recipient = Bukkit.getOfflinePlayer(args[1]);
-                if (!bitcoinManager.getPlayerFileConfigs().containsKey(recipient.getUniqueId())) { sender.sendMessage(messages.getMessage("never_joined").replace("{PLAYER}", args[1])); return true; }
+                if (!bitcoinManager.getPlayerFileConfigs().containsKey(recipient.getUniqueId())) { sender.sendMessage(Message.NEVER_JOINED.toString().replace("{PLAYER}", args[1])); return true; }
                 try {
                     double newBalance = Double.valueOf(args[2]);
-                    if (newBalance < 0) { sender.sendMessage(messages.getMessage("invalid_number")); return true; }
-                    if (bitcoinManager.getCirculationLimit() > 0 && bitcoinManager.getBitcoinsInCirculation() + (newBalance - bitcoinManager.getBalance(recipient.getUniqueId())) >= bitcoinManager.getCirculationLimit()) { sender.sendMessage(messages.getMessage("exceeds_limit").replace("{LIMIT}", util.formatNumber(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getCirculationLimit())))); return true; }
+                    if (newBalance < 0) { sender.sendMessage(Message.INVALID_NUMBER.toString()); return true; }
+                    if (bitcoinManager.getCirculationLimit() > 0 && bitcoinManager.getBitcoinsInCirculation() + (newBalance - bitcoinManager.getBalance(recipient.getUniqueId())) >= bitcoinManager.getCirculationLimit()) { sender.sendMessage(Message.EXCEEDS_LIMIT.toString().replace("{LIMIT}", util.formatRoundNumber(bitcoinManager.getCirculationLimit()))); return true; }
                     bitcoinManager.setBalance(recipient.getUniqueId(), newBalance);
-                    sender.sendMessage(messages.getMessage("set_command").replace("{AMOUNT}", util.formatNumber((newBalance))).replace("{PLAYER}", bitcoinManager.getOfflinePlayerName(recipient)));
+                    sender.sendMessage(Message.SET_COMMAND.toString().replace("{AMOUNT}", util.formatNumber((newBalance))).replace("{PLAYER}", bitcoinManager.getOfflinePlayerName(recipient)));
                 } catch (NumberFormatException e) {
-                    sender.sendMessage(messages.getMessage("invalid_number"));
+                    sender.sendMessage(Message.INVALID_NUMBER.toString());
                 }
             }
 
             else if (args[0].equalsIgnoreCase("reload")) {
-                if (!sender.hasPermission("bitcoin.reload")) { sender.sendMessage(messages.getMessage("no_permission")); return true; }
+                if (!sender.hasPermission("bitcoin.reload")) { sender.sendMessage(Message.NO_PERMISSION.toString()); return true; }
                 plugin.reload();
-                sender.sendMessage(messages.getMessage("reload_command"));
+                sender.sendMessage(Message.RELOAD_COMMAND.toString());
             }
 
             else if (args[0].equalsIgnoreCase("top")) {
-                if (!sender.hasPermission("bitcoin.top")) { sender.sendMessage(messages.getMessage("no_permission")); return true; }
+                if (!sender.hasPermission("bitcoin.top")) { sender.sendMessage(Message.NO_PERMISSION.toString()); return true; }
 
                 List<OfflinePlayer> topBalPlayers = bitcoinManager.getTopBalPlayers();
                 StringBuilder top5Balances = new StringBuilder();
                 for (int i = 0; i < 5; i++) {
-                    if (i < topBalPlayers.size()) {
-                        top5Balances.append(messages.getMessage("top_bal_command_format").replace("{PLACE}", String.valueOf(i + 1)).replace("{PLAYER}", bitcoinManager.getOfflinePlayerName(topBalPlayers.get(i))).replace("{BALANCE}", util.formatNumber(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBalance(topBalPlayers.get(i).getUniqueId())))));
-                    } else {
-                        top5Balances.append(messages.getMessage("top_bal_command_format").replace("{PLACE}", String.valueOf(i + 1)).replace("{PLAYER}", "N/A").replace("{BALANCE}", "0"));
-                    }
+                    top5Balances.append(Message.TOP_BAL_COMMAND_FORMAT.toString()
+                            .replace("{PLACE}", String.valueOf(i + 1))
+                            .replace("{PLAYER}", i < topBalPlayers.size() ? bitcoinManager.getOfflinePlayerName(topBalPlayers.get(i)) : "N/A")
+                            .replace("{BALANCE}", i < topBalPlayers.size() ? util.formatRoundNumber(bitcoinManager.getBalance(topBalPlayers.get(i).getUniqueId())) : "0"));
                     if (i != 4) { top5Balances.append("\n"); }
                 }
 
                 List<OfflinePlayer> topTimePlayers = bitcoinManager.getTopTimePlayers();
                 StringBuilder top5Times = new StringBuilder();
                 for (int i = 0; i < 5; i++) {
-                    if (i < topTimePlayers.size()) {
-                        top5Times.append(messages.getMessage("top_time_command_format").replace("{PLACE}", String.valueOf(i + 1)).replace("{PLAYER}", bitcoinManager.getOfflinePlayerName(topTimePlayers.get(i))).replace("{MIN}", String.valueOf(bitcoinManager.getBestPuzzleTime(topTimePlayers.get(i).getUniqueId()) / 60.0).split("\\.")[0]).replace("{SEC}", String.valueOf(bitcoinManager.getBestPuzzleTime(topTimePlayers.get(i).getUniqueId()) % 60)));
-                    } else {
-                        top5Times.append(messages.getMessage("top_time_command_format").replace("{PLACE}", String.valueOf(i + 1)).replace("{PLAYER}", "N/A").replace("{MIN}", "0").replace("{SEC}", "0"));
-                    }
+                    top5Times.append(Message.TOP_TIME_COMMAND_FORMAT.toString()
+                            .replace("{PLACE}", String.valueOf(i + 1))
+                            .replace("{PLAYER}", i < topTimePlayers.size() ? bitcoinManager.getOfflinePlayerName(topTimePlayers.get(i)) : "N/A")
+                            .replace("{MIN}", i < topTimePlayers.size() ? String.valueOf(bitcoinManager.getBestPuzzleTime(topTimePlayers.get(i).getUniqueId()) / 60.0).split("\\.")[0] : "0")
+                            .replace("{SEC}", i < topTimePlayers.size() ? String.valueOf(bitcoinManager.getBestPuzzleTime(topTimePlayers.get(i).getUniqueId()) % 60) : "0"));
                     if (i != 4) { top5Times.append("\n"); }
                 }
 
                 List<OfflinePlayer> topSolvedPlayers = bitcoinManager.getTopSolvedPlayers();
                 StringBuilder top5Solved = new StringBuilder();
                 for (int i = 0; i < 5; i++) {
-                    if (i < topSolvedPlayers.size()) {
-                        top5Solved.append(messages.getMessage("top_solved_command_format").replace("{PLACE}", String.valueOf(i + 1)).replace("{PLAYER}", bitcoinManager.getOfflinePlayerName(topSolvedPlayers.get(i))).replace("{AMOUNT}", util.formatNumber(bitcoinManager.getPuzzlesSolved(topSolvedPlayers.get(i).getUniqueId()))));
-                    } else {
-                        top5Solved.append(messages.getMessage("top_solved_command_format").replace("{PLACE}", String.valueOf(i + 1)).replace("{PLAYER}", "N/A").replace("{AMOUNT}", "0"));
-                    }
+                    top5Solved.append(Message.TOP_SOLVED_COMMAND_FORMAT.toString()
+                            .replace("{PLACE}", String.valueOf(i + 1))
+                            .replace("{PLAYER}", i < topSolvedPlayers.size() ? bitcoinManager.getOfflinePlayerName(topSolvedPlayers.get(i)) : "N/A")
+                            .replace("{AMOUNT}", i < topSolvedPlayers.size() ? util.formatNumber(bitcoinManager.getPuzzlesSolved(topSolvedPlayers.get(i).getUniqueId())) : "0"));
                     if (i != 4) { top5Solved.append("\n"); }
                 }
 
                 if (args.length == 1 || (!args[1].equalsIgnoreCase("bal") && !args[1].equalsIgnoreCase("time") && !args[1].equalsIgnoreCase("solved"))) {
-                    sender.sendMessage(messages.getMessage("top_bal_command_header"));
+                    sender.sendMessage(Message.TOP_BAL_COMMAND_HEADER.toString());
                     sender.sendMessage(top5Balances.toString());
                     sender.sendMessage("");
-                    sender.sendMessage(messages.getMessage("top_time_command_header"));
+                    sender.sendMessage(Message.TOP_TIME_COMMAND_HEADER.toString());
                     sender.sendMessage(top5Times.toString());
                     sender.sendMessage("");
-                    sender.sendMessage(messages.getMessage("top_solved_command_header"));
+                    sender.sendMessage(Message.TOP_SOLVED_COMMAND_HEADER.toString());
                     sender.sendMessage(top5Solved.toString());
                 } else {
                     if (args[1].equalsIgnoreCase("bal")) {
-                        sender.sendMessage(messages.getMessage("top_bal_command_header"));
+                        sender.sendMessage(Message.TOP_BAL_COMMAND_HEADER.toString());
                         sender.sendMessage(top5Balances.toString());
                     } else if (args[1].equalsIgnoreCase("time")) {
-                        sender.sendMessage(messages.getMessage("top_time_command_header"));
+                        sender.sendMessage(Message.TOP_TIME_COMMAND_HEADER.toString());
                         sender.sendMessage(top5Times.toString());
                     } else if (args[1].equalsIgnoreCase("solved")) {
-                        sender.sendMessage(messages.getMessage("top_solved_command_header"));
+                        sender.sendMessage(Message.TOP_SOLVED_COMMAND_HEADER.toString());
                         sender.sendMessage(top5Solved.toString());
                     }
                 }
             }
 
             else if (args[0].equalsIgnoreCase("bank")) {
-                if (!sender.hasPermission("bitcoin.bank")) { sender.sendMessage(messages.getMessage("no_permission")); return true; }
-                sender.sendMessage(messages.getMessage("bank_command").replace("{AMOUNT}", util.formatNumber((util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getAmountInBank())))));
+                if (!sender.hasPermission("bitcoin.bank")) { sender.sendMessage(Message.NO_PERMISSION.toString()); return true; }
+                sender.sendMessage(Message.BANK_COMMAND.toString().replace("{AMOUNT}", util.formatRoundNumber(bitcoinManager.getAmountInBank())));
             }
 
             else if (args[0].equalsIgnoreCase("tax")) {
-                if (!sender.hasPermission("bitcoin.tax")) { sender.sendMessage(messages.getMessage("no_permission")); return true; }
-                sender.sendMessage(messages.getMessage("tax_command").replace("{TAX}", bitcoinManager.getPurchaseTaxPercentage() + "%"));
+                if (!sender.hasPermission("bitcoin.tax")) { sender.sendMessage(Message.NO_PERMISSION.toString()); return true; }
+                sender.sendMessage(Message.TAX_COMMAND.toString().replace("{TAX}", bitcoinManager.getPurchaseTaxPercentage() + "%"));
             }
 
             else if (args[0].equalsIgnoreCase("circulation")) {
-                if (!sender.hasPermission("bitcoin.circulation")) { sender.sendMessage(messages.getMessage("no_permission")); return true; }
-                if (bitcoinManager.getCirculationLimit() > 0) {
-                    sender.sendMessage(messages.getMessage("circulation_command").replace("{AMOUNT}", util.formatNumber((util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBitcoinsInCirculation())))).replace("{LIMIT}", String.valueOf(util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getCirculationLimit()))));
-                } else {
-                    sender.sendMessage(messages.getMessage("circulation_command").replace("{AMOUNT}", util.formatNumber((util.round(bitcoinManager.getDisplayRoundAmount(), bitcoinManager.getBitcoinsInCirculation())))).replace("{LIMIT}", "none"));
-                }
+                if (!sender.hasPermission("bitcoin.circulation")) { sender.sendMessage(Message.NO_PERMISSION.toString()); return true; }
+                sender.sendMessage(Message.CIRCULATION_COMMAND.toString()
+                        .replace("{AMOUNT}", util.formatRoundNumber(bitcoinManager.getBitcoinsInCirculation()))
+                        .replace("{LIMIT}", bitcoinManager.getCirculationLimit() > 0 ? util.formatRoundNumber(bitcoinManager.getCirculationLimit()) : "none"));
             }
 
             else if (args[0].equalsIgnoreCase("blackmarket")) {
-                if (sender instanceof ConsoleCommandSender) { sender.sendMessage(messages.getMessage("cannot_use_from_console")); return true; }
+                if (sender instanceof ConsoleCommandSender) { sender.sendMessage(Message.CANNOT_USE_FROM_CONSOLE.toString()); return true; }
                 Player player = (Player) sender;
                 if (args.length == 1) {
-                    if (!player.hasPermission("bitcoin.blackmarket")) { player.sendMessage(messages.getMessage("no_permission")); return true; }
+                    if (!player.hasPermission("bitcoin.blackmarket")) { player.sendMessage(Message.NO_PERMISSION.toString()); return true; }
                     blackMarket.open(player);
                 } else {
-                    if (args.length < 4) { player.sendMessage(messages.getMessage("black_market_command_invalid_arg")); return true; }
+                    if (args.length < 4) { player.sendMessage(Message.BLACK_MARKET_COMMAND_INVALID_ARG.toString()); return true; }
                     if (args[1].equalsIgnoreCase("setslot")) {
-                        if (!player.hasPermission("bitcoin.blackmarket.edit")) { player.sendMessage(messages.getMessage("no_permission")); return true; }
+                        if (!player.hasPermission("bitcoin.blackmarket.edit")) { player.sendMessage(Message.NO_PERMISSION.toString()); return true; }
                         try {
                             int slot = Integer.valueOf(args[2]) - 1;
                             double price = Double.valueOf(args[3]);
-                            if (slot < 0 || slot > 53 || price < 0) { player.sendMessage(messages.getMessage("invalid_number")); return true; }
-                            if (!Bukkit.getVersion().contains("1.8") && !Bukkit.getVersion().contains("1.7")) {
-                                blackMarket.editItem(slot, player.getInventory().getItemInMainHand(), price);
-                            } else {
-                                blackMarket.editItem(slot, player.getInventory().getItemInHand(), price);
+                            if (slot < 0 || slot > 53 || price < 0) { player.sendMessage(Message.INVALID_NUMBER.toString()); return true; }
+                            Integer stock = null;
+                            if (args.length > 4) {
+                                try {
+                                    stock = Integer.parseInt(args[4]);
+                                    if (stock < 1) { player.sendMessage(Message.INVALID_NUMBER.toString()); return true; }
+                                } catch (NumberFormatException e) {
+                                    player.sendMessage(Message.INVALID_NUMBER.toString());
+                                }
                             }
-                            player.sendMessage(messages.getMessage("black_market_set_item"));
+                            if (!Bukkit.getVersion().contains("1.8") && !Bukkit.getVersion().contains("1.7")) {
+                                blackMarket.editItem(slot, player.getInventory().getItemInMainHand(), price, stock);
+                            } else {
+                                blackMarket.editItem(slot, player.getInventory().getItemInHand(), price, stock);
+                            }
+                            player.sendMessage(Message.BLACK_MARKET_SET_ITEM.toString());
                         } catch (NumberFormatException e) {
-                            player.sendMessage(messages.getMessage("invalid_number"));
+                            player.sendMessage(Message.INVALID_NUMBER.toString());
                         }
                     } else {
-                        player.sendMessage(messages.getMessage("black_market_command_invalid_arg"));
+                        player.sendMessage(Message.BLACK_MARKET_COMMAND_INVALID_ARG.toString());
                     }
                 }
             }
 
             else if (args[0].equalsIgnoreCase("reset")) {
-                if (!sender.hasPermission("bitcoin.reset")) { sender.sendMessage(messages.getMessage("no_permission")); return true; }
-                if (args.length < 2) { sender.sendMessage(messages.getMessage("reset_command_invalid_arg")); return true; }
-                if (!args[1].equalsIgnoreCase("bal") && !args[1].equalsIgnoreCase("mined") && !args[1].equalsIgnoreCase("time") && !args[1].equalsIgnoreCase("solved")) { sender.sendMessage(messages.getMessage("reset_command_invalid_arg")); return true; }
+                if (!sender.hasPermission("bitcoin.reset")) { sender.sendMessage(Message.NO_PERMISSION.toString()); return true; }
+                if (args.length < 2) { sender.sendMessage(Message.RESET_COMMAND_INVALID_ARG.toString()); return true; }
+                if (!args[1].equalsIgnoreCase("bal") && !args[1].equalsIgnoreCase("mined") && !args[1].equalsIgnoreCase("time") && !args[1].equalsIgnoreCase("solved")) { sender.sendMessage(Message.RESET_COMMAND_INVALID_ARG.toString()); return true; }
 
                 if (args[1].equalsIgnoreCase("bal")) {
                     bitcoinManager.resetBalances();
-                    sender.sendMessage(messages.getMessage("reset_command_bal"));
+                    sender.sendMessage(Message.RESET_COMMAND_BAL.toString());
                 } else if (args[1].equalsIgnoreCase("mined")) {
                     bitcoinManager.resetMined();
-                    sender.sendMessage(messages.getMessage("reset_command_mined"));
+                    sender.sendMessage(Message.RESET_COMMAND_MINED.toString());
                 } else if (args[1].equalsIgnoreCase("time")) {
                     bitcoinManager.resetTimes();
-                    sender.sendMessage(messages.getMessage("reset_command_time"));
+                    sender.sendMessage(Message.RESET_COMMAND_TIME.toString());
                 } else if (args[1].equalsIgnoreCase("solved")) {
                     bitcoinManager.resetSolved();
-                    sender.sendMessage(messages.getMessage("reset_command_solved"));
+                    sender.sendMessage(Message.RESET_COMMAND_SOLVED.toString());
                 }
             }
 
             else {
-                sender.sendMessage(messages.getMessage("invalid_command"));
+                sender.sendMessage(Message.INVALID_COMMAND.toString());
             }
 
             return true;
@@ -350,18 +372,16 @@ class BitcoinCommand implements CommandExecutor, Listener {
 
     @EventHandler
     @SuppressWarnings("unused")
-    public void onCommand(PlayerCommandPreprocessEvent event) {
-        if (!messages.getMessage("command_name").equalsIgnoreCase("/bitcoin") && event.getMessage().split(" ")[0].equalsIgnoreCase(messages.getMessage("command_name"))) {
-            event.getPlayer().performCommand(event.getMessage().replace(messages.getMessage("command_name"), "/bitcoin"));
-            event.setCancelled(true);
-        }
-        if (event.getMessage().split(" ")[0].equalsIgnoreCase("/bitcoin") && !messages.getMessage("command_name").equalsIgnoreCase("/bitcoin")) {
-            event.setCancelled(true);
-            event.getPlayer().sendMessage("Unknown command. Type \"/help\" for help.");
-        }
-        if (event.getMessage().split(" ")[0].equalsIgnoreCase("/btc") && !messages.getMessage("command_name").equalsIgnoreCase("/bitcoin")) {
-            event.setCancelled(true);
-            event.getPlayer().sendMessage("Unknown command. Type \"/help\" for help.");
+    public void onPlayerCommand(PlayerCommandPreprocessEvent event) {
+        String commandName = event.getMessage().split(" ")[0];
+        String customCommandName = Message.COMMAND_NAME.toString();
+        if (!customCommandName.equalsIgnoreCase("/bitcoin")) {
+            if (commandName.equalsIgnoreCase(customCommandName)) {
+                event.setMessage(event.getMessage().replace(customCommandName, "/bitcoin"));
+            } else if (commandName.equalsIgnoreCase("/bitcoin") || commandName.equalsIgnoreCase("/btc")) {
+                event.setCancelled(true);
+                event.getPlayer().sendMessage("Unknown command. Type \"/help\" for help.");
+            }
         }
     }
 }

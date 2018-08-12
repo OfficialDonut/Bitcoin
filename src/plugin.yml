@@ -1,9 +1,11 @@
 name: Bitcoin
-version: 2.1
+version: 2.1.5
 author: _Donut_
 main: us._donut_.bitcoin.Bitcoin
+website: https://www.spigotmc.org/resources/bitcoin.52085/
 depend: [Vault]
 softdepend: [PlayerPoints, PointsAPI, PlaceholderAPI, MVdWPlaceholderAPI]
+api-version: 1.13
 commands:
   bitcoin:
     description: Opens bitcoin menu

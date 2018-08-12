@@ -8,15 +8,14 @@ import java.util.*;
 
 class Sounds {
 
-    private Bitcoin plugin;
+    private Bitcoin plugin = Bitcoin.plugin;
     private Util util;
     private File soundsFile;
     private YamlConfiguration soundsConfig;
     private Map<String, Sound> sounds = new HashMap<>();
 
-    Sounds(Bitcoin pluginInstance) {
-        plugin = pluginInstance;
-        util = pluginInstance.getUtil();
+    Sounds() {
+        util = plugin.getUtil();
         reload();
     }
 
@@ -38,6 +37,7 @@ class Sounds {
 
     private void loadDefaults() {
         soundsConfig.addDefault("black_market_not_enough_bitcoins", "ENTITY_BAT_TAKEOFF");
+        soundsConfig.addDefault("black_market_out_of_stock", "ENTITY_BAT_TAKEOFF");
         soundsConfig.addDefault("black_market_purchase", "ENTITY_EXPERIENCE_ORB_PICKUP");
         soundsConfig.addDefault("cancelled_exchange", "ENTITY_BAT_TAKEOFF");
         soundsConfig.addDefault("cancelled_purchase", "ENTITY_BAT_TAKEOFF");
@@ -64,8 +64,6 @@ class Sounds {
     }
 
     private void loadAllSounds() {
-        for (String sound : soundsConfig.getKeys(false)) {
-            sounds.put(sound, Sound.valueOf(soundsConfig.getString(sound)));
-        }
+        soundsConfig.getKeys(false).forEach(sound -> sounds.put(sound, Sound.valueOf(soundsConfig.getString(sound))));
     }
 }
