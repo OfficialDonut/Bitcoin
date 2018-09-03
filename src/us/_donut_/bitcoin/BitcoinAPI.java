@@ -17,15 +17,16 @@ public class BitcoinAPI {
         mining = pluginInstance.getMining();
     }
 
-    public Double getAmountInCirculation() { return bitcoinManager.getBitcoinsInCirculation(); }
+    public double getAmountInCirculation() { return bitcoinManager.getBitcoinsInCirculation(); }
     public List<OfflinePlayer> getTopPlayers() { return bitcoinManager.getTopBalPlayers(); }
-    public Double getAmountInBank() { return bitcoinManager.getAmountInBank(); }
-    public Double getPurchaseTaxPercentage() { return bitcoinManager.getPurchaseTaxPercentage(); }
-    public Double getBalance(UUID playerUUID) { return bitcoinManager.getBalance(playerUUID); }
-    public Integer getPuzzlesSolved(UUID playerUUID) { return bitcoinManager.getPuzzlesSolved(playerUUID); }
-    public Double getBitcoinsMined(UUID playerUUID) { return bitcoinManager.getBitcoinsMined(playerUUID); }
-    public Double getBitcoinValue() { return bitcoinManager.getBitcoinValue(); }
-    public Double getCirculationLimit() { return bitcoinManager.getCirculationLimit(); }
+    public double getAmountInBank() { return bitcoinManager.getAmountInBank(); }
+    public double getPurchaseTaxPercentage() { return bitcoinManager.getPurchaseTaxPercentage(); }
+    public double getBalance(UUID playerUUID) { return bitcoinManager.getBalance(playerUUID); }
+    public int getPuzzlesSolved(UUID playerUUID) { return bitcoinManager.getPuzzlesSolved(playerUUID); }
+    public long getBestPuzzleTime(UUID playerUUID) { return bitcoinManager.getBestPuzzleTime(playerUUID); }
+    public double getBitcoinsMined(UUID playerUUID) { return bitcoinManager.getBitcoinsMined(playerUUID); }
+    public double getBitcoinValue() { return bitcoinManager.getBitcoinValue(); }
+    public double getCirculationLimit() { return bitcoinManager.getCirculationLimit(); }
     public String getExchangeCurrencySymbol() { return bitcoinManager.getExchangeCurrencySymbol(); }
     public void setBalance(UUID playerUUID, double balance) { bitcoinManager.setBalance(playerUUID, balance); }
     public void withdraw(UUID playerUUID, double amount) { bitcoinManager.withdraw(playerUUID, amount); }

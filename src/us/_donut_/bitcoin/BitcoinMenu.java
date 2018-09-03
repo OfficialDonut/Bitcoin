@@ -16,14 +16,19 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import us._donut_.bitcoin.configuration.Message;
+import us._donut_.bitcoin.configuration.Sounds;
 
 import java.util.*;
+
+import static us._donut_.bitcoin.util.Util.*;
 
 class BitcoinMenu implements Listener {
 
     private Bitcoin plugin = Bitcoin.plugin;
-    private Util util;
     private BitcoinManager bitcoinManager;
     private BlackMarket blackMarket;
     private Sounds sounds;
@@ -43,7 +48,6 @@ class BitcoinMenu implements Listener {
     private List<Player> playersBuying = new ArrayList<>();
 
     BitcoinMenu() {
-        util = plugin.getUtil();
         bitcoinManager = plugin.getBitcoinManager();
         blackMarket = plugin.getBlackMarket();
         sounds = plugin.getSounds();
@@ -57,19 +61,22 @@ class BitcoinMenu implements Listener {
         }
         menus.clear();
         if (!Bukkit.getVersion().contains("1.13")) {
-            darkBlueGlass = util.createItemStack(Material.STAINED_GLASS_PANE, (short) 11, " ", null);
-            lightBlueGlass = util.createItemStack(Material.STAINED_GLASS_PANE, (short) 3, " ", null);
-            transferBitcoinItem = util.createItemStack(Material.BOOK_AND_QUILL, (short) 0, Message.TRANSFER_ITEM_NAME.toString(), Message.TRANSFER_ITEM_LORE.toString());
+            darkBlueGlass = createItemStack(Material.STAINED_GLASS_PANE, (short) 11, " ", null);
+            lightBlueGlass = createItemStack(Material.STAINED_GLASS_PANE, (short) 3, " ", null);
+            transferBitcoinItem = createItemStack(Material.BOOK_AND_QUILL, (short) 0, Message.TRANSFER_ITEM_NAME.toString(), Message.TRANSFER_ITEM_LORE.toString());
         } else {
-            darkBlueGlass = util.createItemStack(Material.valueOf("BLUE_STAINED_GLASS_PANE"), (short) 0, " ", null);
-            lightBlueGlass = util.createItemStack(Material.valueOf("LIGHT_BLUE_STAINED_GLASS_PANE"), (short) 0, " ", null);
-            transferBitcoinItem = util.createItemStack(Material.valueOf("WRITABLE_BOOK"), (short) 0, Message.TRANSFER_ITEM_NAME.toString(), Message.TRANSFER_ITEM_LORE.toString());
+            darkBlueGlass = createItemStack(Material.valueOf("BLUE_STAINED_GLASS_PANE"), (short) 0, " ", null);
+            lightBlueGlass = createItemStack(Material.valueOf("LIGHT_BLUE_STAINED_GLASS_PANE"), (short) 0, " ", null);
+            transferBitcoinItem = createItemStack(Material.valueOf("WRITABLE_BOOK"), (short) 0, Message.TRANSFER_ITEM_NAME.toString(), Message.TRANSFER_ITEM_LORE.toString());
         }
-        exchangeBitcoinItem = util.createItemStack(Material.GOLD_INGOT, (short) 0, Message.EXCHANGE_ITEM_NAME.toString(), Message.EXCHANGE_ITEM_LORE.toString());
-        buyBitcoinItem = util.createItemStack(Material.EMERALD, (short) 0, Message.BUY_ITEM_NAME.toString(), Message.BUY_ITEM_LORE.toString());
-        miningBitcoinItem = util.createItemStack(Material.DIAMOND_PICKAXE, (short) 0, Message.MINING_ITEM_NAME.toString(), Message.MINING_ITEM_LORE.toString());
-        helpItem = util.createItemStack(Material.PAPER, (short) 0, Message.HELP_ITEM_NAME.toString(), Message.HELP_ITEM_LORE.toString());
-        blackMarketItem = util.createItemStack(Material.ENDER_CHEST, (short) 0, Message.BLACK_MARKET_ITEM_NAME.toString(), Message.BLACK_MARKET_ITEM_LORE.toString());
+        exchangeBitcoinItem = createItemStack(Material.GOLD_INGOT, (short) 0, Message.EXCHANGE_ITEM_NAME.toString(), Message.EXCHANGE_ITEM_LORE.toString());
+        buyBitcoinItem = createItemStack(Material.EMERALD, (short) 0, Message.BUY_ITEM_NAME.toString(), Message.BUY_ITEM_LORE.toString());
+        miningBitcoinItem = createItemStack(Material.DIAMOND_PICKAXE, (short) 0, Message.MINING_ITEM_NAME.toString(), Message.MINING_ITEM_LORE.toString());
+        ItemMeta itemMeta = miningBitcoinItem.getItemMeta();
+        itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_DESTROYS);
+        miningBitcoinItem.setItemMeta(itemMeta);
+        helpItem = createItemStack(Material.PAPER, (short) 0, Message.HELP_ITEM_NAME.toString(), Message.HELP_ITEM_LORE.toString());
+        blackMarketItem = createItemStack(Material.ENDER_CHEST, (short) 0, Message.BLACK_MARKET_ITEM_NAME.toString(), Message.BLACK_MARKET_ITEM_LORE.toString());
     }
 
     List<Player> getPlayersExchanging() { return playersExchanging; }
@@ -78,10 +85,10 @@ class BitcoinMenu implements Listener {
 
     void open(Player player) {
         if (menus.containsKey(player)) {
-            menus.get(player).setItem(10, util.getSkull(player.getUniqueId(), player.getName(), Message.STATISTIC_ITEM_NAME.toString(), Message.STATISTIC_ITEM_LORE.toString()
-                    .replace("{BALANCE}", util.formatRoundNumber(bitcoinManager.getBalance(player.getUniqueId())))
-                    .replace("{AMOUNT_SOLVED}", util.formatNumber(bitcoinManager.getPuzzlesSolved(player.getUniqueId())))
-                    .replace("{AMOUNT_MINED}", util.formatRoundNumber(bitcoinManager.getBitcoinsMined(player.getUniqueId())))
+            menus.get(player).setItem(10, getSkull(player.getUniqueId(), player.getName(), Message.STATISTIC_ITEM_NAME.toString(), Message.STATISTIC_ITEM_LORE.toString()
+                    .replace("{BALANCE}", formatRoundNumber(bitcoinManager.getBalance(player.getUniqueId())))
+                    .replace("{AMOUNT_SOLVED}", formatNumber(bitcoinManager.getPuzzlesSolved(player.getUniqueId())))
+                    .replace("{AMOUNT_MINED}", formatRoundNumber(bitcoinManager.getBitcoinsMined(player.getUniqueId())))
                     .replace("{MIN}", String.valueOf(bitcoinManager.getBestPuzzleTime(player.getUniqueId()) / 60.0).split("\\.")[0])
                     .replace("{SEC}", String.valueOf(bitcoinManager.getBestPuzzleTime(player.getUniqueId()) % 60))));
         } else {
@@ -92,10 +99,10 @@ class BitcoinMenu implements Listener {
 
     private void createMenu(Player player) {
         Inventory menu = Bukkit.createInventory(null, 27, Message.MENU_TITLE.toString());
-        menu.setItem(10, util.getSkull(player.getUniqueId(), player.getName(), Message.STATISTIC_ITEM_NAME.toString(), Message.STATISTIC_ITEM_LORE.toString()
-                .replace("{BALANCE}", util.formatRoundNumber(bitcoinManager.getBalance(player.getUniqueId())))
-                .replace("{AMOUNT_SOLVED}", util.formatNumber(bitcoinManager.getPuzzlesSolved(player.getUniqueId())))
-                .replace("{AMOUNT_MINED}", util.formatRoundNumber(bitcoinManager.getBitcoinsMined(player.getUniqueId())))
+        menu.setItem(10, getSkull(player.getUniqueId(), player.getName(), Message.STATISTIC_ITEM_NAME.toString(), Message.STATISTIC_ITEM_LORE.toString()
+                .replace("{BALANCE}", formatRoundNumber(bitcoinManager.getBalance(player.getUniqueId())))
+                .replace("{AMOUNT_SOLVED}", formatNumber(bitcoinManager.getPuzzlesSolved(player.getUniqueId())))
+                .replace("{AMOUNT_MINED}", formatRoundNumber(bitcoinManager.getBitcoinsMined(player.getUniqueId())))
                 .replace("{MIN}", String.valueOf(bitcoinManager.getBestPuzzleTime(player.getUniqueId()) / 60.0).split("\\.")[0])
                 .replace("{SEC}", String.valueOf(bitcoinManager.getBestPuzzleTime(player.getUniqueId()) % 60))));
         menu.setItem(11, transferBitcoinItem);
@@ -151,7 +158,7 @@ class BitcoinMenu implements Listener {
                 player.closeInventory();
                 player.playSound(player.getLocation(), sounds.getSound("click_transfer_item"), 1, 1);
                 playersTransferring.add(player);
-                player.sendMessage(Message.BEGIN_TRANSFER.toString().replace("{BALANCE}", util.formatRoundNumber(bitcoinManager.getBalance(player.getUniqueId()))));
+                player.sendMessage(Message.BEGIN_TRANSFER.toString().replace("{BALANCE}", formatRoundNumber(bitcoinManager.getBalance(player.getUniqueId()))));
                 sendCancelButton(player);
                 Bukkit.getScheduler().runTaskLater(plugin, () -> {
                     if (playersTransferring.contains(player)) {
@@ -167,8 +174,8 @@ class BitcoinMenu implements Listener {
                     player.closeInventory();
                     player.playSound(player.getLocation(), sounds.getSound("click_buy_item"), 1, 1);
                     playersBuying.add(player);
-                    player.sendMessage(Message.BEGIN_PURCHASE.toString().replace("{BANK}", util.formatRoundNumber(bitcoinManager.getAmountInBank()))
-                            .replace("{VALUE}", bitcoinManager.getExchangeCurrencySymbol() + util.formatRound2Number(bitcoinManager.getBitcoinValue()))
+                    player.sendMessage(Message.BEGIN_PURCHASE.toString().replace("{BANK}", formatRoundNumber(bitcoinManager.getAmountInBank()))
+                            .replace("{VALUE}", bitcoinManager.getExchangeCurrencySymbol() + formatRound2Number(bitcoinManager.getBitcoinValue()))
                             .replace("{TAX}", bitcoinManager.getPurchaseTaxPercentage() + "%"));
                     sendCancelButton(player);
                     Bukkit.getScheduler().runTaskLater(plugin, () -> {
@@ -188,7 +195,7 @@ class BitcoinMenu implements Listener {
                     playersExchanging.add(player);
                     player.sendMessage(Message.BEGIN_EXCHANGE.toString()
                             .replace("{BALANCE}", String.valueOf(bitcoinManager.getBalance(player.getUniqueId())))
-                            .replace("{VALUE}", bitcoinManager.getExchangeCurrencySymbol() + util.formatRound2Number(bitcoinManager.getBitcoinValue())));
+                            .replace("{VALUE}", bitcoinManager.getExchangeCurrencySymbol() + formatRound2Number(bitcoinManager.getBitcoinValue())));
                     sendCancelButton(player);
                     Bukkit.getScheduler().runTaskLater(plugin, () -> {
                         if (playersExchanging.contains(player)) {
@@ -241,14 +248,14 @@ class BitcoinMenu implements Listener {
             event.setCancelled(true);
             try {
                 double exchangeAmount = Double.valueOf(event.getMessage());
-                if (exchangeAmount > bitcoinManager.getBalance(player.getUniqueId())) { player.sendMessage(Message.NOT_ENOUGH_BITCOINS.toString().replace("{BALANCE}", util.formatRoundNumber(bitcoinManager.getBalance(player.getUniqueId())))); return; }
+                if (exchangeAmount > bitcoinManager.getBalance(player.getUniqueId())) { player.sendMessage(Message.NOT_ENOUGH_BITCOINS.toString().replace("{BALANCE}", formatRoundNumber(bitcoinManager.getBalance(player.getUniqueId())))); return; }
                     if (exchangeAmount <= 0) { player.sendMessage(Message.INVALID_NUMBER.toString()); return; }
                     bitcoinManager.withdraw(player.getUniqueId(), exchangeAmount);
                     bitcoinManager.addToBank(exchangeAmount);
                     player.playSound(player.getLocation(), sounds.getSound("complete_exchange"), 1, 1);
                     player.sendMessage(Message.COMPLETE_EXCHANGE.toString()
-                            .replace("{AMOUNT}", util.formatNumber(exchangeAmount))
-                            .replace("{NEW_AMOUNT}", bitcoinManager.getExchangeCurrencySymbol() + util.formatRound2Number(bitcoinManager.getBitcoinValue() * exchangeAmount)));
+                            .replace("{AMOUNT}", formatNumber(exchangeAmount))
+                            .replace("{NEW_AMOUNT}", bitcoinManager.getExchangeCurrencySymbol() + formatRound2Number(bitcoinManager.getBitcoinValue() * exchangeAmount)));
                     plugin.getEconomy().depositPlayer(player, player.getWorld().getName(), bitcoinManager.getBitcoinValue() * exchangeAmount);
                     playersExchanging.remove(player);
             } catch (NumberFormatException e) {
@@ -264,15 +271,15 @@ class BitcoinMenu implements Listener {
             if (recipient.equals(player)) { player.sendMessage(Message.CANNOT_TRANSFER_TO_SELF.toString()); return; }
             try {
                 double transferAmount = Double.valueOf(message[1]);
-                if (transferAmount > bitcoinManager.getBalance(player.getUniqueId())) { player.sendMessage(Message.NOT_ENOUGH_BITCOINS.toString().replace("{BALANCE}", util.formatRoundNumber(bitcoinManager.getBalance(player.getUniqueId())))); return; }
+                if (transferAmount > bitcoinManager.getBalance(player.getUniqueId())) { player.sendMessage(Message.NOT_ENOUGH_BITCOINS.toString().replace("{BALANCE}", formatRoundNumber(bitcoinManager.getBalance(player.getUniqueId())))); return; }
                 if (transferAmount <= 0) { player.sendMessage(Message.INVALID_NUMBER.toString()); return; }
                 bitcoinManager.withdraw(player.getUniqueId(), transferAmount);
                 bitcoinManager.deposit(recipient.getUniqueId(), transferAmount);
                 player.sendMessage(Message.CANNOT_TRANSFER_TO_SELF.toString()
-                        .replace("{AMOUNT}", util.formatNumber(transferAmount))
+                        .replace("{AMOUNT}", formatNumber(transferAmount))
                         .replace("{RECIPIENT}", bitcoinManager.getOfflinePlayerName(recipient)));
                 recipient.sendMessage(Message.RECEIVE_BITCOINS.toString()
-                        .replace("{AMOUNT}", util.formatNumber(transferAmount))
+                        .replace("{AMOUNT}", formatNumber(transferAmount))
                         .replace("{SENDER}", player.getDisplayName()));
                 player.playSound(player.getLocation(), sounds.getSound("complete_transfer"), 1, 1);
                 recipient.playSound(player.getLocation(), sounds.getSound("complete_transfer"), 1, 1);
@@ -285,7 +292,7 @@ class BitcoinMenu implements Listener {
             event.setCancelled(true);
             try {
                 double buyAmount = Double.valueOf(event.getMessage());
-                if (buyAmount > bitcoinManager.getAmountInBank()) { player.sendMessage(Message.NOT_ENOUGH_IN_BANK.toString().replace("{AMOUNT}", util.formatRoundNumber(bitcoinManager.getAmountInBank()))); return; }
+                if (buyAmount > bitcoinManager.getAmountInBank()) { player.sendMessage(Message.NOT_ENOUGH_IN_BANK.toString().replace("{AMOUNT}", formatRoundNumber(bitcoinManager.getAmountInBank()))); return; }
                 if (buyAmount <= 0) { player.sendMessage(Message.INVALID_NUMBER.toString()); return; }
                 double cost = (buyAmount * bitcoinManager.getBitcoinValue()) * (1 + bitcoinManager.getPurchaseTaxPercentage() / 100);
                 if (cost > plugin.getEconomy().getBalance(player)) { player.sendMessage(Message.NOT_ENOUGH_MONEY.toString()); return; }
@@ -293,9 +300,9 @@ class BitcoinMenu implements Listener {
                 bitcoinManager.removeFromBank(buyAmount);
                 player.playSound(player.getLocation(), sounds.getSound("complete_purchase"), 1, 1);
                 player.sendMessage(Message.COMPLETE_PURCHASE.toString()
-                        .replace("{AMOUNT}", util.formatNumber(buyAmount))
-                        .replace("{COST}", bitcoinManager.getExchangeCurrencySymbol() + util.formatRound2Number(bitcoinManager.getBitcoinValue() * buyAmount))
-                        .replace("{TAX}", bitcoinManager.getExchangeCurrencySymbol() + util.formatRound2Number(bitcoinManager.getPurchaseTaxPercentage() / 100 * cost)));
+                        .replace("{AMOUNT}", formatNumber(buyAmount))
+                        .replace("{COST}", bitcoinManager.getExchangeCurrencySymbol() + formatRound2Number(bitcoinManager.getBitcoinValue() * buyAmount))
+                        .replace("{TAX}", bitcoinManager.getExchangeCurrencySymbol() + formatRound2Number(bitcoinManager.getPurchaseTaxPercentage() / 100 * cost)));
                 plugin.getEconomy().withdrawPlayer(player, player.getWorld().getName(), cost);
                 playersBuying.remove(player);
             } catch (NumberFormatException e) {

@@ -12,13 +12,16 @@ import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import us._donut_.bitcoin.configuration.Message;
+import us._donut_.bitcoin.configuration.Sounds;
 
 import java.util.*;
+
+import static us._donut_.bitcoin.util.Util.*;
 
 class BlackMarket implements Listener {
 
     private Bitcoin plugin = Bitcoin.plugin;
-    private Util util;
     private BitcoinManager bitcoinManager;
     private Sounds sounds;
     private Inventory blackMarketInterface;
@@ -27,7 +30,6 @@ class BlackMarket implements Listener {
     private Map<Integer, Integer> slotStocks = new HashMap<>();
 
     BlackMarket() {
-        util = plugin.getUtil();
         bitcoinManager = plugin.getBitcoinManager();
         sounds = plugin.getSounds();
         reload();
@@ -53,7 +55,7 @@ class BlackMarket implements Listener {
                 lore.addAll(itemMeta.getLore());
             }
             lore.add(" ");
-            lore.add(Message.BLACK_MARKET_ITEM_COST.toString().replace("{COST}", util.formatNumber(slotPrices.get(slot))));
+            lore.add(Message.BLACK_MARKET_ITEM_COST.toString().replace("{COST}", formatNumber(slotPrices.get(slot))));
             if (slotStocks.containsKey(slot)) {
                 lore.add(slotStocks.get(slot) > 0 ? Message.BLACK_MARKET_ITEM_IN_STOCK.toString().replace("{AMOUNT}", String.valueOf(slotStocks.get(slot))) : Message.BLACK_MARKET_ITEM_OUT_OF_STOCK.toString());
             } else {
@@ -85,7 +87,7 @@ class BlackMarket implements Listener {
                 lore.addAll(itemMeta.getLore());
             }
             lore.add(" ");
-            lore.add(Message.BLACK_MARKET_ITEM_COST.toString().replace("{COST}", util.formatNumber(price)));
+            lore.add(Message.BLACK_MARKET_ITEM_COST.toString().replace("{COST}", formatNumber(price)));
             lore.add(stock == null ? Message.BLACK_MARKET_ITEM_INFINITE_STOCK.toString() : Message.BLACK_MARKET_ITEM_IN_STOCK.toString().replace("{AMOUNT}", String.valueOf(stock)));
             itemMeta.setLore(lore);
             displayItem.setItemMeta(itemMeta);
@@ -97,7 +99,7 @@ class BlackMarket implements Listener {
                 plugin.getBlackMarketConfig().set(String.valueOf(slot) + ".stock", stock);
             }
         }
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> util.saveYml(plugin.getBlackMarketFile(), plugin.getBlackMarketConfig()));
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> saveYml(plugin.getBlackMarketFile(), plugin.getBlackMarketConfig()));
     }
 
     @EventHandler
@@ -135,7 +137,7 @@ class BlackMarket implements Listener {
                     bitcoinManager.withdraw(player.getUniqueId(), slotPrices.get(slot));
                     bitcoinManager.addToBank(slotPrices.get(slot));
                     player.getInventory().addItem(slotItems.get(slot).clone());
-                    player.sendMessage(Message.BLACK_MARKET_PURCHASE.toString().replace("{COST}", util.formatNumber((slotPrices.get(slot)))));
+                    player.sendMessage(Message.BLACK_MARKET_PURCHASE.toString().replace("{COST}", formatNumber((slotPrices.get(slot)))));
                     player.playSound(player.getLocation(), sounds.getSound("black_market_purchase"), 1, 1);
                     if (slotStocks.containsKey(slot)) {
                         slotStocks.put(slot, slotStocks.get(slot) - 1);
@@ -146,7 +148,7 @@ class BlackMarket implements Listener {
                         itemMeta.setLore(lore);
                         event.getCurrentItem().setItemMeta(itemMeta);
                         plugin.getBlackMarketConfig().set(String.valueOf(slot) + ".stock", slotStocks.get(slot));
-                        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> util.saveYml(plugin.getBlackMarketFile(), plugin.getBlackMarketConfig()));
+                        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> saveYml(plugin.getBlackMarketFile(), plugin.getBlackMarketConfig()));
                     }
                 } else {
                     player.sendMessage(Message.BLACK_MARKET_NOT_ENOUGH_BITCOINS.toString());

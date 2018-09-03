@@ -13,13 +13,16 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
+import us._donut_.bitcoin.configuration.Message;
+import us._donut_.bitcoin.configuration.Sounds;
 
 import java.util.*;
+
+import static us._donut_.bitcoin.util.Util.*;
 
 class Mining implements Listener {
 
     private Bitcoin plugin = Bitcoin.plugin;
-    private Util util;
     private Sounds sounds;
     private BitcoinManager bitcoinManager;
     private ItemStack resetButton;
@@ -45,7 +48,6 @@ class Mining implements Listener {
     private Random random = new Random();
 
     Mining() {
-        util = plugin.getUtil();
         bitcoinManager = plugin.getBitcoinManager();
         sounds = plugin.getSounds();
         reload();
@@ -66,19 +68,20 @@ class Mining implements Listener {
         minReward = plugin.getBitcoinConfig().getDouble("min_mining_reward");
         maxReward = plugin.getBitcoinConfig().getDouble("max_mining_reward");
         newPuzzleDelay = plugin.getBitcoinConfig().getLong("new_mining_puzzle_delay");
-        resetButton = util.createItemStack(Material.TNT, (short) 0, Message.RESET_ITEM_NAME.toString(), Message.RESET_ITEM_LORE.toString());
-        solveButton = util.createItemStack(Material.SLIME_BALL, (short) 0, Message.SOLVE_ITEM_NAME.toString(), Message.SOLVE_ITEM_LORE.toString());
-        exitButton = util.createItemStack(Material.BARRIER, (short) 0, Message.EXIT_ITEM_NAME.toString(), Message.EXIT_ITEM_LORE.toString());
+        resetButton = createItemStack(Material.TNT, (short) 0, Message.RESET_ITEM_NAME.toString(), Message.RESET_ITEM_LORE.toString());
+        solveButton = createItemStack(Material.SLIME_BALL, (short) 0, Message.SOLVE_ITEM_NAME.toString(), Message.SOLVE_ITEM_LORE.toString());
+        exitButton = createItemStack(Material.BARRIER, (short) 0, Message.EXIT_ITEM_NAME.toString(), Message.EXIT_ITEM_LORE.toString());
         String[] glassNames = {Message.WHITE_TILE.toString(), Message.ORANGE_TILE.toString(), Message.MAGENTA_TILE.toString(), Message.LIGHT_BLUE_TILE.toString(), Message.YELLOW_TILE.toString(),
                 Message.LIME_TILE.toString(), Message.PINK_TILE.toString(), Message.GRAY_TILE.toString(),Message.LIGHT_GRAY_TILE.toString(), Message.CYAN_TILE.toString(), Message.PURPLE_TILE.toString(),
                 Message.BLUE_TILE.toString(), Message.BROWN_TILE.toString(), Message.GREEN_TILE.toString(), Message.RED_TILE.toString(), Message.BLACK_TILE.toString()};
         if (!Bukkit.getVersion().contains("1.13")) {
-            plainGlassPane = util.createItemStack(Material.THIN_GLASS, (short) 0, " ", null);
-            for (short i = 0; i < 16; i++) { coloredGlass.add(util.createItemStack(Material.STAINED_GLASS_PANE, i, glassNames[i], null)); }
-            for (int i = 0; i < 44; i++) { numberedGlass.add(util.createItemStackWithAmount(Material.STAINED_GLASS_PANE, i + 1, i % 2 == 0 ? (short) 11 : (short) 14, ChatColor.translateAlternateColorCodes('&', "&9&l") + (i + 1), null)); }
+            plainGlassPane = createItemStack(Material.THIN_GLASS, (short) 0, " ", null);
+            for (short i = 0; i < 16; i++) { coloredGlass.add(createItemStack(Material.STAINED_GLASS_PANE, i, glassNames[i], null)); }
+            for (int i = 0; i < 44; i++) { numberedGlass.add(createItemStackWithAmount(Material.STAINED_GLASS_PANE, i + 1, i % 2 == 0 ? (short) 11 : (short) 14, ChatColor.translateAlternateColorCodes('&', "&9&l") + (i + 1), null)); }
         } else {
-            plainGlassPane = util.createItemStack(Material.valueOf("GLASS_PANE"), (short) 0, " ", null);
-            for (short i = 0; i < 16; i++) { coloredGlass.add(util.createItemStack(util.getGlass(i), (short) 0, glassNames[i], null)); }
+            plainGlassPane = createItemStack(Material.valueOf("GLASS_PANE"), (short) 0, " ", null);
+            for (short i = 0; i < 16; i++) { coloredGlass.add(createItemStack(getGlass(i), (short) 0, glassNames[i], null)); }
+            for (int i = 0; i < 44; i++) { numberedGlass.add(createItemStackWithAmount(getGlass(i % 2 == 0 ? 11 : 14), i + 1, (short) 0, ChatColor.translateAlternateColorCodes('&', "&9&l") + (i + 1), null)); }
         }
     }
 
@@ -179,9 +182,9 @@ class Mining implements Listener {
                 for (int i = 0; i < 44; i++) {
                     numberedGlass.clear();
                     if (!Bukkit.getVersion().contains("1.13")) {
-                        numberedGlass.add(util.createItemStackWithAmount(Material.STAINED_GLASS_PANE, i + 1, i % 2 == 0 ? (short) 11 : (short) 14, ChatColor.translateAlternateColorCodes('&', "&9&l") + (i + 1), null));
+                        numberedGlass.add(createItemStackWithAmount(Material.STAINED_GLASS_PANE, i + 1, i % 2 == 0 ? (short) 11 : (short) 14, ChatColor.translateAlternateColorCodes('&', "&9&l") + (i + 1), null));
                     } else {
-                        numberedGlass.add(util.createItemStackWithAmount(i % 2 == 0 ? Material.valueOf("BLUE_STAINED_GLASS_PANE") : Material.valueOf("BLUE_STAINED_GLASS_PANE"), i + 1, (short) 0, ChatColor.translateAlternateColorCodes('&', "&9&l") + (i + 1), null));
+                        numberedGlass.add(createItemStackWithAmount(i % 2 == 0 ? Material.valueOf("BLUE_STAINED_GLASS_PANE") : Material.valueOf("BLUE_STAINED_GLASS_PANE"), i + 1, (short) 0, ChatColor.translateAlternateColorCodes('&', "&9&l") + (i + 1), null));
                     }
                 }
                 return false;
@@ -217,7 +220,7 @@ class Mining implements Listener {
                         return false;
                     }
                 } else {
-                    if (miningInterface.getItem(slot) == null || miningInterface.getItem(slot).getType() != util.getGlass(puzzleAnswer.get(slot))) {
+                    if (miningInterface.getItem(slot) == null || miningInterface.getItem(slot).getType() != getGlass(puzzleAnswer.get(slot))) {
                         return false;
                     }
                 }
@@ -325,7 +328,7 @@ class Mining implements Listener {
                 }
             } else if (event.getSlot() == 49) {
                 if (puzzleIsSolved(event.getInventory())) {
-                    reward = util.round(2, minReward + (maxReward - minReward) * random.nextDouble());
+                    reward = round(2, minReward + (maxReward - minReward) * random.nextDouble());
                     rewardTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
                         if (bitcoinManager.getBitcoinsInCirculation() >= bitcoinManager.getCirculationLimit()) { reward = 0; rewardTask.cancel(); }
                         if (bitcoinManager.getCirculationLimit() > 0 && bitcoinManager.getBitcoinsInCirculation() + reward >= bitcoinManager.getCirculationLimit()) {

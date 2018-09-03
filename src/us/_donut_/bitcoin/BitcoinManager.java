@@ -10,6 +10,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitTask;
+import us._donut_.bitcoin.configuration.Message;
+import us._donut_.bitcoin.configuration.Sounds;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -19,10 +21,11 @@ import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
 
-class BitcoinManager implements Listener {
+import static us._donut_.bitcoin.util.Util.*;
+
+public class BitcoinManager implements Listener {
 
     private Bitcoin plugin = Bitcoin.plugin;
-    private Util util;
     private Sounds sounds;
     private Map<UUID, Double> balances = new HashMap<>();
     private Map<UUID, Integer> puzzlesSolved = new HashMap<>();
@@ -59,7 +62,6 @@ class BitcoinManager implements Listener {
     private Random random = new Random();
 
     BitcoinManager() {
-        util = plugin.getUtil();
         sounds = plugin.getSounds();
         reload();
     }
@@ -103,7 +105,7 @@ class BitcoinManager implements Listener {
                     if (config.contains("display_name")) {
                         offlinePlayerDisplayNames.put(playerUUID, config.getString("display_name"));
                     }
-                    util.getUUIDOfflinePlayerCache().put(playerUUID, player);
+                    getUUIDOfflinePlayerCache().put(playerUUID, player);
                 }
             }
         }
@@ -121,7 +123,7 @@ class BitcoinManager implements Listener {
         if (!useRealValue) {
             String frequencyString = plugin.getBitcoinConfig().getString("fluctuation_frequency");
             if (frequencyString.contains(":")) {
-                Long timeInTicks = util.getTicksFromTime(frequencyString);
+                Long timeInTicks = getTicksFromTime(frequencyString);
                 if (timeInTicks == null) {
                     timeInTicks = 1L;
                 }
@@ -141,7 +143,7 @@ class BitcoinManager implements Listener {
         if (useRealValue && broadcastRealValue) {
             String frequencyString = plugin.getBitcoinConfig().getString("fluctuation_frequency");
             if (frequencyString.contains(":")) {
-                Long timeInTicks = util.getTicksFromTime(frequencyString);
+                Long timeInTicks = getTicksFromTime(frequencyString);
                 if (timeInTicks == null) {
                     timeInTicks = 1L;
                 }
@@ -159,17 +161,17 @@ class BitcoinManager implements Listener {
     }
 
     Map<UUID, YamlConfiguration> getPlayerFileConfigs() { return playerFileConfigs; }
-    Double getAmountInBank() { return amountInBank; }
-    Double getPurchaseTaxPercentage() { return purchaseTaxPercentage; }
-    Double getBalance(UUID playerUUID) { return balances.getOrDefault(playerUUID, 0.0); }
-    Integer getPuzzlesSolved(UUID playerUUID) { return puzzlesSolved.getOrDefault(playerUUID, 0); }
-    Double getBitcoinsMined(UUID playerUUID) { return bitcoinsMined.getOrDefault(playerUUID, 0.0); }
-    Long getBestPuzzleTime(UUID playerUUID) { return puzzleTimes.getOrDefault(playerUUID, 0L); }
-    Integer getDisplayRoundAmount() { return displayRoundAmount; }
-    Double getCirculationLimit() { return circulationLimit; }
-    String getExchangeCurrencySymbol() { return exchangeCurrencySymbol; }
+    public Double getAmountInBank() { return amountInBank; }
+    public Double getPurchaseTaxPercentage() { return purchaseTaxPercentage; }
+    public Double getBalance(UUID playerUUID) { return balances.getOrDefault(playerUUID, 0.0); }
+    public Integer getPuzzlesSolved(UUID playerUUID) { return puzzlesSolved.getOrDefault(playerUUID, 0); }
+    public Double getBitcoinsMined(UUID playerUUID) { return bitcoinsMined.getOrDefault(playerUUID, 0.0); }
+    public Long getBestPuzzleTime(UUID playerUUID) { return puzzleTimes.getOrDefault(playerUUID, 0L); }
+    public Integer getDisplayRoundAmount() { return displayRoundAmount; }
+    public Double getCirculationLimit() { return circulationLimit; }
+    public String getExchangeCurrencySymbol() { return exchangeCurrencySymbol; }
 
-    Double getBitcoinValue() {
+    public Double getBitcoinValue() {
         if (useRealValue) {
              try {
                  URL address = new URL("https://blockchain.info/ticker");
@@ -178,16 +180,16 @@ class BitcoinManager implements Listener {
                  source.readLine();
                  double value = Double.valueOf(source.readLine().split("\"last\" : ")[1].split(",")[0]);
                  lastRealValue = value;
-                 return util.round(2, value);
+                 return round(2, value);
              } catch (IOException | NumberFormatException e) {
-                 return util.round(2, lastRealValue);
+                 return round(2, lastRealValue);
              }
         } else {
             return bitcoinValue;
         }
     }
 
-    Double getBitcoinsInCirculation() {
+    public Double getBitcoinsInCirculation() {
         bitcoinsInCirculation = amountInBank;
         balances.values().forEach(balance -> bitcoinsInCirculation += balance);
         return bitcoinsInCirculation;
@@ -229,55 +231,55 @@ class BitcoinManager implements Listener {
     void setBalance(UUID playerUUID, double balance) {
         balances.put(playerUUID, balance);
         playerFileConfigs.get(playerUUID).set("balance", balance);
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> util.saveYml(playerFiles.get(playerUUID), playerFileConfigs.get(playerUUID)));
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> saveYml(playerFiles.get(playerUUID), playerFileConfigs.get(playerUUID)));
     }
 
     void withdraw(UUID playerUUID, double amount) {
         balances.put(playerUUID, balances.get(playerUUID) - amount);
         playerFileConfigs.get(playerUUID).set("balance", balances.get(playerUUID));
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> util.saveYml(playerFiles.get(playerUUID), playerFileConfigs.get(playerUUID)));
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> saveYml(playerFiles.get(playerUUID), playerFileConfigs.get(playerUUID)));
     }
 
     void deposit(UUID playerUUID, double amount) {
         balances.put(playerUUID, balances.get(playerUUID) + amount);
         playerFileConfigs.get(playerUUID).set("balance", balances.get(playerUUID));
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> util.saveYml(playerFiles.get(playerUUID), playerFileConfigs.get(playerUUID)));
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> saveYml(playerFiles.get(playerUUID), playerFileConfigs.get(playerUUID)));
     }
 
     void setPuzzlesSolved(UUID playerUUID, int amount) {
         puzzlesSolved.put(playerUUID, amount);
         playerFileConfigs.get(playerUUID).set("puzzles_solved", amount);
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> util.saveYml(playerFiles.get(playerUUID), playerFileConfigs.get(playerUUID)));
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> saveYml(playerFiles.get(playerUUID), playerFileConfigs.get(playerUUID)));
     }
 
     void setBitcoinsMined(UUID playerUUID, double amount) {
         bitcoinsMined.put(playerUUID, amount);
         playerFileConfigs.get(playerUUID).set("bitcoins_mined", bitcoinsMined.get(playerUUID));
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> util.saveYml(playerFiles.get(playerUUID), playerFileConfigs.get(playerUUID)));
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> saveYml(playerFiles.get(playerUUID), playerFileConfigs.get(playerUUID)));
     }
 
     void addToBank(double amount) {
         amountInBank += amount;
         plugin.getBitcoinConfig().set("amount_in_bank", amountInBank);
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> util.saveYml(plugin.getConfigFile(), plugin.getBitcoinConfig()));
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> saveYml(plugin.getConfigFile(), plugin.getBitcoinConfig()));
     }
 
     void removeFromBank(double amount) {
         amountInBank -= amount;
         plugin.getBitcoinConfig().set("amount_in_bank", amountInBank);
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> util.saveYml(plugin.getConfigFile(), plugin.getBitcoinConfig()));
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> saveYml(plugin.getConfigFile(), plugin.getBitcoinConfig()));
     }
 
     void setBestPuzzleTime(UUID playerUUID, long time) {
         puzzleTimes.put(playerUUID, time);
         playerFileConfigs.get(playerUUID).set("best_puzzle_time", puzzleTimes.get(playerUUID));
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> util.saveYml(playerFiles.get(playerUUID), playerFileConfigs.get(playerUUID)));
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> saveYml(playerFiles.get(playerUUID), playerFileConfigs.get(playerUUID)));
     }
 
     private void setOfflinePlayerName(UUID playerUUID, String name) {
         offlinePlayerDisplayNames.put(playerUUID, name);
         playerFileConfigs.get(playerUUID).set("display_name", name);
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> util.saveYml(playerFiles.get(playerUUID), playerFileConfigs.get(playerUUID)));
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> saveYml(playerFiles.get(playerUUID), playerFileConfigs.get(playerUUID)));
     }
 
     void resetBalances() {
@@ -311,7 +313,7 @@ class BitcoinManager implements Listener {
         if (!playerFileConfig.contains("puzzles_solved")) { setPuzzlesSolved(playerUUID, 0); }
         if (!playerFileConfig.contains("bitcoins_mined")) { setBitcoinsMined(playerUUID, 0); }
         if (!playerFileConfig.contains("best_puzzle_time")) { setBestPuzzleTime(playerUUID, 0); }
-        util.getLastPlayedCache().remove(playerUUID);
+        getLastPlayedCache().remove(playerUUID);
         Bukkit.getScheduler().runTaskLater(plugin, () -> setOfflinePlayerName(event.getPlayer().getUniqueId(), event.getPlayer().getDisplayName()), 20);
     }
 
@@ -322,23 +324,23 @@ class BitcoinManager implements Listener {
         File playerFile = playerFiles.get(playerUUID);
         YamlConfiguration playerFileConfig = playerFileConfigs.get(playerUUID);
         setOfflinePlayerName(event.getPlayer().getUniqueId(), event.getPlayer().getDisplayName());
-        util.getLastPlayedCache().put(playerUUID, System.currentTimeMillis());
+        getLastPlayedCache().put(playerUUID, System.currentTimeMillis());
     }
 
     void fluctuate() {
-        double fluctuation = util.round(2, minFluctuation + (random.nextDouble() * (maxFluctuation - minFluctuation)));
+        double fluctuation = round(2, minFluctuation + (random.nextDouble() * (maxFluctuation - minFluctuation)));
         if (random.nextBoolean()) { fluctuation = fluctuation * -1; }
         if (bitcoinValue + fluctuation < bitcoinMinValue) {
-            fluctuation = util.round(2, bitcoinValue - bitcoinMinValue);
+            fluctuation = round(2, bitcoinValue - bitcoinMinValue);
             bitcoinValue = bitcoinMinValue;
         } else if (bitcoinMaxValue > 0 && bitcoinValue + fluctuation > bitcoinMaxValue) {
-            fluctuation = util.round(2, bitcoinMaxValue - bitcoinValue);
+            fluctuation = round(2, bitcoinMaxValue - bitcoinValue);
             bitcoinValue = bitcoinMaxValue;
         } else {
-            bitcoinValue = util.round(2, bitcoinValue + fluctuation);
+            bitcoinValue = round(2, bitcoinValue + fluctuation);
         }
         plugin.getBitcoinConfig().set("bitcoin_value", bitcoinValue);
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> util.saveYml(plugin.getConfigFile(), plugin.getBitcoinConfig()));
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> saveYml(plugin.getConfigFile(), plugin.getBitcoinConfig()));
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (bitcoinValue > (bitcoinValue - fluctuation) && bitcoinValue != bitcoinMinValue) {
                 player.sendMessage(Message.VALUE_INCREASE.toString()
@@ -386,11 +388,11 @@ class BitcoinManager implements Listener {
     private void runInactivityChecker() {
         inactivityChecker = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             balances.forEach((uuid, balance) -> {
-                OfflinePlayer player = util.getUUIDOfflinePlayerCache().getOrDefault(uuid, Bukkit.getOfflinePlayer(uuid));
-                util.getUUIDOfflinePlayerCache().put(uuid, player);
+                OfflinePlayer player = getUUIDOfflinePlayerCache().getOrDefault(uuid, Bukkit.getOfflinePlayer(uuid));
+                getUUIDOfflinePlayerCache().put(uuid, player);
                 if (balance > 0 && !player.isOnline()) {
-                    long lastPlayed = util.getLastPlayedCache().getOrDefault(uuid, player.getLastPlayed());
-                    util.getLastPlayedCache().put(uuid, lastPlayed);
+                    long lastPlayed = getLastPlayedCache().getOrDefault(uuid, player.getLastPlayed());
+                    getLastPlayedCache().put(uuid, lastPlayed);
                     if (System.currentTimeMillis() - lastPlayed > inactivityPeriod) {
                         if (broadcastBalanceReset) {
                             Bukkit.broadcastMessage(Message.INACTIVE_BALANCE_RESET.toString()
@@ -410,7 +412,7 @@ class BitcoinManager implements Listener {
             timeSinceLastBroadcast++;
             if (timeSinceLastBroadcast == frequency) {
                 if (!alreadyBroadcasted) {
-                    String value = util.formatRound2Number(getBitcoinValue());
+                    String value = formatRound2Number(getBitcoinValue());
                     for (Player player : plugin.getServer().getOnlinePlayers()) {
                         player.sendMessage(Message.REAL_VALUE_ANNOUNCEMENT.toString().replace("{VALUE}", exchangeCurrencySymbol + value));
                         player.playSound(player.getLocation(), sounds.getSound("real_value_announcement"), 1, 1);
@@ -429,7 +431,7 @@ class BitcoinManager implements Listener {
         notifyRealValue = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             if (world.getTime() % 24000 == timeInTicks) {
                 if (!alreadyBroadcasted) {
-                    String value = util.formatRound2Number(getBitcoinValue());
+                    String value = formatRound2Number(getBitcoinValue());
                     for (Player player : plugin.getServer().getOnlinePlayers()) {
                         player.sendMessage(Message.REAL_VALUE_ANNOUNCEMENT.toString().replace("{VALUE}", exchangeCurrencySymbol + value));
                         player.playSound(player.getLocation(), sounds.getSound("real_value_announcement"), 1, 1);
