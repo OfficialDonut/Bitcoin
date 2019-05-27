@@ -1,41 +1,43 @@
 package us._donut_.bitcoin;
 
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import us._donut_.bitcoin.mining.MiningManager;
 
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 
 public class BitcoinAPI {
 
-    private BitcoinManager bitcoinManager;
-    private BitcoinMenu bitcoinMenu;
-    private Mining mining;
+    private static BitcoinManager bitcoinManager;
+    private static PlayerDataManager playerDataManager;
+    private static MiningManager miningManager;
+    private static BitcoinMenu bitcoinMenu;
 
-    BitcoinAPI(Bitcoin pluginInstance) {
-        bitcoinManager = pluginInstance.getBitcoinManager();
-        bitcoinMenu = pluginInstance.getBitcoinMenu();
-        mining = pluginInstance.getMining();
+    static void init() {
+        bitcoinManager = BitcoinManager.getInstance();
+        playerDataManager = PlayerDataManager.getInstance();
+        miningManager = MiningManager.getInstance();
+        bitcoinMenu = BitcoinMenu.getInstance();
     }
 
-    public double getAmountInCirculation() { return bitcoinManager.getBitcoinsInCirculation(); }
-    public List<OfflinePlayer> getTopPlayers() { return bitcoinManager.getTopBalPlayers(); }
-    public double getAmountInBank() { return bitcoinManager.getAmountInBank(); }
-    public double getPurchaseTaxPercentage() { return bitcoinManager.getPurchaseTaxPercentage(); }
-    public double getBalance(UUID playerUUID) { return bitcoinManager.getBalance(playerUUID); }
-    public int getPuzzlesSolved(UUID playerUUID) { return bitcoinManager.getPuzzlesSolved(playerUUID); }
-    public long getBestPuzzleTime(UUID playerUUID) { return bitcoinManager.getBestPuzzleTime(playerUUID); }
-    public double getBitcoinsMined(UUID playerUUID) { return bitcoinManager.getBitcoinsMined(playerUUID); }
-    public double getBitcoinValue() { return bitcoinManager.getBitcoinValue(); }
-    public double getCirculationLimit() { return bitcoinManager.getCirculationLimit(); }
-    public String getExchangeCurrencySymbol() { return bitcoinManager.getExchangeCurrencySymbol(); }
-    public void setBalance(UUID playerUUID, double balance) { bitcoinManager.setBalance(playerUUID, balance); }
-    public void withdraw(UUID playerUUID, double amount) { bitcoinManager.withdraw(playerUUID, amount); }
-    public void deposit(UUID playerUUID, double amount) { bitcoinManager.deposit(playerUUID, amount); }
-    public void setPuzzlesSolved(UUID playerUUID, int amount) { bitcoinManager.setPuzzlesSolved(playerUUID, amount); }
-    public void setBitcoinsMined(UUID playerUUID, double amount) { bitcoinManager.setBitcoinsMined(playerUUID, amount); }
-    public void addToBank(double amount) { bitcoinManager.addToBank(amount); }
-    public void removeFromBank(double amount) { bitcoinManager.removeFromBank(amount); }
-    public void makeValueFluctuate() { bitcoinManager.fluctuate(); }
-    public void openMainMenu(Player player) { bitcoinMenu.open(player); }
-    public void openMiningInterface(Player player) { mining.openInterface(player); }
+    public static List<UUID> getTopPlayers() { return playerDataManager.getTopBalPlayers(); }
+    public static double getCirculationLimit() { return bitcoinManager.getCirculationLimit(); }
+    public static double getAmountInCirculation() { return bitcoinManager.getBitcoinsInCirculation(); }
+    public static double getAmountInBank() { return bitcoinManager.getAmountInBank(); }
+    public static double getPurchaseTaxPercentage() { return bitcoinManager.getPurchaseTaxPercentage(); }
+    public static double getBitcoinValue() { return bitcoinManager.getBitcoinValue(); }
+    public static double getBalance(UUID playerUUID) { return playerDataManager.getBalance(playerUUID); }
+    public static double getBitcoinsMined(UUID playerUUID) { return playerDataManager.getBitcoinsMined(playerUUID); }
+    public static long getPuzzlesSolved(UUID playerUUID) { return playerDataManager.getPuzzlesSolved(playerUUID); }
+    public static long getBestPuzzleTime(UUID playerUUID) { return playerDataManager.getBestPuzzleTime(playerUUID); }
+    public static void setBalance(UUID playerUUID, double balance) { playerDataManager.setBalance(playerUUID, balance); }
+    public static void withdraw(UUID playerUUID, double amount) { playerDataManager.withdraw(playerUUID, amount); }
+    public static void deposit(UUID playerUUID, double amount) { playerDataManager.deposit(playerUUID, amount); }
+    public static void setPuzzlesSolved(UUID playerUUID, int amount) { playerDataManager.setPuzzlesSolved(playerUUID, amount); }
+    public static void setBitcoinsMined(UUID playerUUID, double amount) { playerDataManager.setBitcoinsMined(playerUUID, amount); }
+    public static void addToBank(double amount) { bitcoinManager.addToBank(amount); }
+    public static void removeFromBank(double amount) { bitcoinManager.removeFromBank(amount); }
+    public static void makeValueFluctuate() { bitcoinManager.fluctuate(); }
+    public static void openMainMenu(Player player) { bitcoinMenu.open(player); }
+    public static void openMiningInterface(Player player) { miningManager.openInterface(player); }
 }

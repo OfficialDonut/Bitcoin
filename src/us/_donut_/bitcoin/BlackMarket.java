@@ -2,7 +2,7 @@ package us._donut_.bitcoin;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.libs.jline.internal.Nullable;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -12,151 +12,150 @@ import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import us._donut_.bitcoin.configuration.Message;
-import us._donut_.bitcoin.configuration.Sounds;
+import us._donut_.bitcoin.config.Messages;
+import us._donut_.bitcoin.config.Sounds;
 
-import java.util.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import static us._donut_.bitcoin.util.Util.*;
+public class BlackMarket implements Listener {
 
-class BlackMarket implements Listener {
-
-    private Bitcoin plugin = Bitcoin.plugin;
+    private static BlackMarket instance;
+    private Bitcoin plugin;
     private BitcoinManager bitcoinManager;
-    private Sounds sounds;
+    private PlayerDataManager playerDataManager;
+    private File blackMarketFile;
+    private YamlConfiguration blackMarketConfig;
     private Inventory blackMarketInterface;
     private Map<Integer, ItemStack> slotItems = new HashMap<>();
     private Map<Integer, Double> slotPrices = new HashMap<>();
     private Map<Integer, Integer> slotStocks = new HashMap<>();
 
-    BlackMarket() {
-        bitcoinManager = plugin.getBitcoinManager();
-        sounds = plugin.getSounds();
-        reload();
+    private BlackMarket() {
+        plugin = Bitcoin.getInstance();
+        bitcoinManager = BitcoinManager.getInstance();
+        playerDataManager = PlayerDataManager.getInstance();
+        blackMarketFile = new File(plugin.getDataFolder(), "black_market.yml");
+        blackMarketConfig = YamlConfiguration.loadConfiguration(blackMarketFile);
+        if (!blackMarketFile.exists()) {
+            Util.saveYml(blackMarketFile, blackMarketConfig);
+            plugin.getLogger().info("Generated black_market.yml!");
+        }
     }
 
-    void reload() {
-        slotItems.clear();
-        slotPrices.clear();
-        blackMarketInterface = Bukkit.createInventory(null, 54, Message.BLACK_MARKET_TITLE.toString());
-        for (String key : plugin.getBlackMarketConfig().getKeys(false)) {
+    public static BlackMarket getInstance() {
+        return instance != null ? instance : (instance = new BlackMarket());
+    }
+
+    public void reload() {
+        blackMarketInterface = Bukkit.createInventory(null, 54, Messages.BLACK_MARKET_TITLE.toString());
+        for (String key : blackMarketConfig.getKeys(false)) {
             int slot = Integer.parseInt(key);
-            slotItems.put(slot, plugin.getBlackMarketConfig().getItemStack(key + ".item"));
-            slotPrices.put(slot, plugin.getBlackMarketConfig().getDouble(key + ".price"));
-            if (plugin.getBlackMarketConfig().contains(key + ".stock")) {
-                slotStocks.put(slot, plugin.getBlackMarketConfig().getInt(key + ".stock"));
+            slotItems.put(slot, blackMarketConfig.getItemStack(key + ".item"));
+            slotPrices.put(slot, blackMarketConfig.getDouble(key + ".price"));
+            if (blackMarketConfig.contains(key + ".stock")) {
+                slotStocks.put(slot, blackMarketConfig.getInt(key + ".stock"));
             }
-        }
-        for (int slot : slotItems.keySet()) {
-            ItemStack displayItem = slotItems.get(slot).clone();
-            ItemMeta itemMeta = displayItem.getItemMeta();
-            List<String> lore = new ArrayList<>();
-            if (itemMeta.getLore() != null) {
-                lore.addAll(itemMeta.getLore());
-            }
-            lore.add(" ");
-            lore.add(Message.BLACK_MARKET_ITEM_COST.toString().replace("{COST}", formatNumber(slotPrices.get(slot))));
-            if (slotStocks.containsKey(slot)) {
-                lore.add(slotStocks.get(slot) > 0 ? Message.BLACK_MARKET_ITEM_IN_STOCK.toString().replace("{AMOUNT}", String.valueOf(slotStocks.get(slot))) : Message.BLACK_MARKET_ITEM_OUT_OF_STOCK.toString());
-            } else {
-                lore.add(Message.BLACK_MARKET_ITEM_INFINITE_STOCK.toString());
-            }
-            itemMeta.setLore(lore);
-            displayItem.setItemMeta(itemMeta);
-            blackMarketInterface.setItem(slot, displayItem);
+            blackMarketInterface.setItem(slot, getDisplayItem(slot));
         }
     }
 
-    void open(Player player) {
+    public void open(Player player) {
         player.openInventory(blackMarketInterface);
     }
 
-    void editItem(int slot, ItemStack itemStack, double price, @Nullable Integer stock) {
-        if (itemStack.getType() == Material.AIR) {
-            blackMarketInterface.setItem(slot, null);
-            slotItems.remove(slot);
-            slotPrices.remove(slot);
-            plugin.getBlackMarketConfig().set(String.valueOf(slot), null);
-        } else {
-            slotItems.put(slot, itemStack.clone());
-            slotPrices.put(slot, price);
-            ItemStack displayItem = itemStack.clone();
-            ItemMeta itemMeta = displayItem.getItemMeta();
+    private ItemStack getDisplayItem(int slot) {
+        ItemStack displayItem = slotItems.get(slot).clone();
+        ItemMeta itemMeta = displayItem.getItemMeta();
+        if (itemMeta != null) {
             List<String> lore = new ArrayList<>();
             if (itemMeta.getLore() != null) {
                 lore.addAll(itemMeta.getLore());
+                lore.add(" ");
             }
-            lore.add(" ");
-            lore.add(Message.BLACK_MARKET_ITEM_COST.toString().replace("{COST}", formatNumber(price)));
-            lore.add(stock == null ? Message.BLACK_MARKET_ITEM_INFINITE_STOCK.toString() : Message.BLACK_MARKET_ITEM_IN_STOCK.toString().replace("{AMOUNT}", String.valueOf(stock)));
+            lore.add(Messages.get("black_market_item_cost", Util.formatNumber(slotPrices.get(slot))));
+            int stock = slotStocks.getOrDefault(slot, -1);
+            lore.add(stock > 0 ? Messages.get("black_market_item_in_stock", stock) : stock == 0 ? Messages.BLACK_MARKET_ITEM_OUT_OF_STOCK.toString() : Messages.BLACK_MARKET_ITEM_INFINITE_STOCK.toString());
             itemMeta.setLore(lore);
             displayItem.setItemMeta(itemMeta);
-            blackMarketInterface.setItem(slot, displayItem);
-            plugin.getBlackMarketConfig().set(String.valueOf(slot) + ".item", itemStack);
-            plugin.getBlackMarketConfig().set(String.valueOf(slot) + ".price", price);
-            if (stock != null) {
+        }
+        return displayItem;
+    }
+
+    public void setItem(int slot, ItemStack item, double price, int stock) {
+        if (item == null || item.getType() == Material.AIR) {
+            blackMarketInterface.setItem(slot, null);
+            slotItems.remove(slot);
+            slotPrices.remove(slot);
+            slotStocks.remove(slot);
+            blackMarketConfig.set(String.valueOf(slot), null);
+        } else {
+            item = item.clone();
+            slotItems.put(slot, item);
+            slotPrices.put(slot, price);
+            blackMarketConfig.set(slot + ".item", item);
+            blackMarketConfig.set(slot + ".price", price);
+            if (stock > 0) {
                 slotStocks.put(slot, stock);
-                plugin.getBlackMarketConfig().set(String.valueOf(slot) + ".stock", stock);
+                blackMarketConfig.set(slot + ".stock", stock);
             }
+            blackMarketInterface.setItem(slot, getDisplayItem(slot));
         }
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> saveYml(plugin.getBlackMarketFile(), plugin.getBlackMarketConfig()));
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> Util.saveYml(blackMarketFile, blackMarketConfig));
     }
 
     @EventHandler
-    @SuppressWarnings("unused")
-    public void onDragInGUI(InventoryDragEvent event) {
-        if (event.getInventory().getName() != null && event.getInventory().getName().equalsIgnoreCase(Message.BLACK_MARKET_TITLE.toString())) {
-            event.setCancelled(true);
-        } else if (event.getWhoClicked().getOpenInventory() != null && event.getWhoClicked().getOpenInventory().getTitle() != null && event.getWhoClicked().getOpenInventory().getTitle().equalsIgnoreCase(Message.BLACK_MARKET_TITLE.toString())) {
+    public void onInventoryDrag(InventoryDragEvent event) {
+        if (blackMarketInterface.equals(event.getInventory())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
-    @SuppressWarnings("unused")
-    public void onMoveInGUI(InventoryMoveItemEvent event) {
-        if (event.getDestination().getName() != null && event.getDestination().getName().equalsIgnoreCase(Message.BLACK_MARKET_TITLE.toString())) {
+    public void onInventoryMove(InventoryMoveItemEvent event) {
+        if (blackMarketInterface.equals(event.getDestination()) || blackMarketInterface.equals(event.getSource())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
-    @SuppressWarnings("unused")
     public void onInventoryClick(InventoryClickEvent event) {
-        if (event.getClickedInventory() != null && event.getClickedInventory().getName() != null && event.getClickedInventory().getName().equalsIgnoreCase(Message.BLACK_MARKET_TITLE.toString())) {
+        if (blackMarketInterface.getViewers().contains(event.getWhoClicked())) {
             event.setCancelled(true);
+        }
+        if (event.getClickedInventory() != null && event.getCurrentItem() != null && blackMarketInterface.equals(event.getClickedInventory()) && event.getWhoClicked() instanceof Player) {
             Player player = (Player) event.getWhoClicked();
             int slot = event.getSlot();
             if (slotItems.containsKey(slot)) {
-                if (slotStocks.containsKey(slot) && slotStocks.get(slot) == 0) {
-                    player.sendMessage(Message.BLACK_MARKET_OUT_OF_STOCK.toString());
-                    player.playSound(player.getLocation(), sounds.getSound("black_market_out_of_stock"), 1, 1);
+                ItemStack item = slotItems.get(slot);
+                double price = slotPrices.get(slot);
+                int stock = slotStocks.getOrDefault(slot, -1);
+                if (stock == 0) {
+                    player.sendMessage(Messages.BLACK_MARKET_OUT_OF_STOCK.toString());
+                    player.playSound(player.getLocation(), Sounds.get("black_market_out_of_stock"), 1, 1);
                     return;
                 }
-                if (bitcoinManager.getBalance(player.getUniqueId()) > slotPrices.get(slot)) {
-                    bitcoinManager.withdraw(player.getUniqueId(), slotPrices.get(slot));
-                    bitcoinManager.addToBank(slotPrices.get(slot));
-                    player.getInventory().addItem(slotItems.get(slot).clone());
-                    player.sendMessage(Message.BLACK_MARKET_PURCHASE.toString().replace("{COST}", formatNumber((slotPrices.get(slot)))));
-                    player.playSound(player.getLocation(), sounds.getSound("black_market_purchase"), 1, 1);
-                    if (slotStocks.containsKey(slot)) {
-                        slotStocks.put(slot, slotStocks.get(slot) - 1);
-                        List<String> lore = event.getCurrentItem().getItemMeta().getLore();
-                        lore.remove(lore.size() - 1);
-                        lore.add(slotStocks.get(slot) > 0 ? Message.BLACK_MARKET_ITEM_IN_STOCK.toString().replace("{AMOUNT}", String.valueOf(slotStocks.get(slot))) : Message.BLACK_MARKET_ITEM_OUT_OF_STOCK.toString());
-                        ItemMeta itemMeta = event.getCurrentItem().getItemMeta();
-                        itemMeta.setLore(lore);
-                        event.getCurrentItem().setItemMeta(itemMeta);
-                        plugin.getBlackMarketConfig().set(String.valueOf(slot) + ".stock", slotStocks.get(slot));
-                        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> saveYml(plugin.getBlackMarketFile(), plugin.getBlackMarketConfig()));
-                    }
-                } else {
-                    player.sendMessage(Message.BLACK_MARKET_NOT_ENOUGH_BITCOINS.toString());
-                    player.playSound(player.getLocation(), sounds.getSound("black_market_not_enough_bitcoins"), 1, 1);
+                if (playerDataManager.getBalance(player.getUniqueId()) < price) {
+                    player.sendMessage(Messages.BLACK_MARKET_NOT_ENOUGH_BITCOINS.toString());
+                    player.playSound(player.getLocation(), Sounds.get("black_market_not_enough_bitcoins"), 1, 1);
+                    return;
+                }
+                playerDataManager.withdraw(player.getUniqueId(), price);
+                bitcoinManager.addToBank(price);
+                Bukkit.getScheduler().runTask(plugin, () -> player.getInventory().addItem(item.clone()));
+                player.sendMessage(Messages.get("black_market_purchase", Util.formatNumber(price)));
+                player.playSound(player.getLocation(), Sounds.get("black_market_purchase"), 1, 1);
+                if (stock > 0) {
+                    stock--;
+                    slotStocks.put(slot, stock);
+                    blackMarketConfig.set(slot + ".stock", stock);
+                    Bukkit.getScheduler().runTask(plugin, () -> blackMarketInterface.setItem(slot, getDisplayItem(slot)));
+                    Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> Util.saveYml(blackMarketFile, blackMarketConfig));
                 }
             }
-        } else if (event.getWhoClicked().getOpenInventory() != null && event.getWhoClicked().getOpenInventory().getTitle() != null && event.getWhoClicked().getOpenInventory().getTitle().equalsIgnoreCase(Message.BLACK_MARKET_TITLE.toString())) {
-            event.setCancelled(true);
         }
     }
 }

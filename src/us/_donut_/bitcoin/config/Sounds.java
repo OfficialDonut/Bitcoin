@@ -1,26 +1,22 @@
-package us._donut_.bitcoin.configuration;
+package us._donut_.bitcoin.config;
 
 import org.bukkit.Sound;
 import org.bukkit.configuration.file.YamlConfiguration;
 import us._donut_.bitcoin.Bitcoin;
+import us._donut_.bitcoin.Util;
 
 import java.io.File;
-import java.util.*;
-
-import static us._donut_.bitcoin.util.Util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Sounds {
 
-    private Bitcoin plugin = Bitcoin.plugin;
-    private File soundsFile;
-    private YamlConfiguration soundsConfig;
-    private Map<String, Sound> sounds = new HashMap<>();
+    private static File soundsFile;
+    private static YamlConfiguration soundsConfig;
+    private static Map<String, Sound> sounds = new HashMap<>();
 
-    public Sounds() {
-        reload();
-    }
-
-    public void reload() {
+    public static void reload() {
+        Bitcoin plugin = Bitcoin.getInstance();
         sounds.clear();
         soundsFile = new File(plugin.getDataFolder(), "sounds.yml");
         soundsConfig = YamlConfiguration.loadConfiguration(soundsFile);
@@ -29,14 +25,10 @@ public class Sounds {
             plugin.getLogger().info("Generated sounds.yml!");
         }
         loadDefaults();
-        loadAllSounds();
+        soundsConfig.getKeys(false).forEach(sound -> sounds.put(sound, Sound.valueOf(soundsConfig.getString(sound))));
     }
 
-    public Sound getSound(String sound) {
-        return sounds.get(sound);
-    }
-
-    private void loadDefaults() {
+    private static void loadDefaults() {
         soundsConfig.addDefault("black_market_not_enough_bitcoins", "ENTITY_BAT_TAKEOFF");
         soundsConfig.addDefault("black_market_out_of_stock", "ENTITY_BAT_TAKEOFF");
         soundsConfig.addDefault("black_market_purchase", "ENTITY_EXPERIENCE_ORB_PICKUP");
@@ -59,12 +51,11 @@ public class Sounds {
         soundsConfig.addDefault("real_value_announcement", "ENTITY_PLAYER_LEVELUP");
         soundsConfig.addDefault("reset_tiles", "ENTITY_GENERIC_EXPLODE");
         soundsConfig.addDefault("value_change", "ENTITY_PLAYER_LEVELUP");
-
         soundsConfig.options().copyDefaults(true);
-        saveYml(soundsFile, soundsConfig);
+        Util.saveYml(soundsFile, soundsConfig);
     }
 
-    private void loadAllSounds() {
-        soundsConfig.getKeys(false).forEach(sound -> sounds.put(sound, Sound.valueOf(soundsConfig.getString(sound))));
+    public static Sound get(String sound) {
+        return sounds.get(sound);
     }
 }

@@ -1,57 +1,47 @@
 package us._donut_.bitcoin;
 
-import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import us._donut_.bitcoin.configuration.Config;
-import us._donut_.bitcoin.configuration.Message;
-import us._donut_.bitcoin.configuration.Sounds;
-import us._donut_.bitcoin.placeholders.RegisterMVdWPlaceholderAPI;
-import us._donut_.bitcoin.placeholders.RegisterPlaceholderAPI;
-
-import java.io.File;
-
-import static us._donut_.bitcoin.util.Util.*;
+import us._donut_.bitcoin.config.BitcoinConfig;
+import us._donut_.bitcoin.config.Messages;
+import us._donut_.bitcoin.config.Sounds;
+import us._donut_.bitcoin.hooks.MVdWHook;
+import us._donut_.bitcoin.hooks.PapiHook;
+import us._donut_.bitcoin.hooks.ServerEconomy;
+import us._donut_.bitcoin.mining.ComputerManager;
+import us._donut_.bitcoin.mining.MiningManager;
 
 public class Bitcoin extends JavaPlugin {
 
+    private static Bitcoin plugin;
     private BitcoinManager bitcoinManager;
-    private Mining mining;
-    private BitcoinMenu bitcoinMenu;
+    private PlayerDataManager playerDataManager;
+    private MiningManager miningManager;
+    private ComputerManager computerManager;
     private BlackMarket blackMarket;
-    private File blackMarketFile;
-    private YamlConfiguration blackMarketConfig;
-    private ServerEconomy economy;
-    private Config config;
-    private Sounds sounds;
-    private static BitcoinAPI api;
-    public static Bitcoin plugin;
+    private BitcoinMenu bitcoinMenu;
+
+    public static Bitcoin getInstance() {
+        return plugin;
+    }
 
     @Override
     public void onEnable() {
         plugin = this;
-
-        config = new Config();
-        blackMarketFile = new File(getDataFolder(), "black_market.yml");
-        blackMarketConfig = YamlConfiguration.loadConfiguration(blackMarketFile);
-        if (!blackMarketFile.exists()) { saveYml(blackMarketFile, blackMarketConfig); getLogger().info("Generated black_market.yml!"); }
-        if (new File(getDataFolder(), "Player Data").mkdirs()) { getLogger().info("Generated player data folder!"); }
-        sounds = new Sounds();
-        economy = new ServerEconomy();
-        Message.reload();
-
-        getServer().getPluginManager().registerEvents(bitcoinManager = new BitcoinManager(), this);
-        getServer().getPluginManager().registerEvents(mining = new Mining(), this);
-        getServer().getPluginManager().registerEvents(blackMarket = new BlackMarket(), this);
-        getServer().getPluginManager().registerEvents(bitcoinMenu = new BitcoinMenu(), this);
-
-        BitcoinCommand bitcoinCommand;
-        getServer().getPluginManager().registerEvents(bitcoinCommand = new BitcoinCommand(), this);
-        getCommand("bitcoin").setExecutor(bitcoinCommand);
-
-        if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) { new RegisterPlaceholderAPI().hook(); }
-        if (getServer().getPluginManager().isPluginEnabled("MVdWPlaceholderAPI")) { new RegisterMVdWPlaceholderAPI(); }
-
-        api = new BitcoinAPI(this);
+        bitcoinManager = BitcoinManager.getInstance();
+        PluginManager pluginManager = getServer().getPluginManager();
+        pluginManager.registerEvents(playerDataManager = PlayerDataManager.getInstance(), this);
+        pluginManager.registerEvents(miningManager = MiningManager.getInstance(), this);
+        pluginManager.registerEvents(computerManager = ComputerManager.getInstance(), this);
+        pluginManager.registerEvents(blackMarket = BlackMarket.getInstance(), this);
+        pluginManager.registerEvents(bitcoinMenu = BitcoinMenu.getInstance(), this);
+        pluginManager.registerEvents(BitcoinCommand.getInstance(), this);
+        getCommand("bitcoin").setExecutor(BitcoinCommand.getInstance());
+        reload();
+        BitcoinAPI.init();
+        ServerEconomy.hook();
+        if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) { new PapiHook().hook(); }
+        if (getServer().getPluginManager().isPluginEnabled("MVdWPlaceholderAPI")) { MVdWHook.hook(); };
         getLogger().info("Enabled!");
     }
 
@@ -60,27 +50,16 @@ public class Bitcoin extends JavaPlugin {
         getLogger().info("Disabled!");
     }
 
-    void reload() {
-        Message.reload();
-        config.reload();
-        sounds.reload();
-        economy.reload();
-        bitcoinMenu.reload();
+    public void reload() {
+        Messages.reload();
+        Sounds.reload();
+        BitcoinConfig.reload();
+        ServerEconomy.reload();
         bitcoinManager.reload();
-        mining.reload();
+        playerDataManager.reload();
+        miningManager.reload();
+        computerManager.reload();
         blackMarket.reload();
+        bitcoinMenu.reload();
     }
-
-    public BitcoinManager getBitcoinManager() { return bitcoinManager; }
-    YamlConfiguration getBitcoinConfig() { return config.getBitcoinConfig(); }
-    File getConfigFile() { return config.getConfigFile(); }
-    Mining getMining() { return mining; }
-    BlackMarket getBlackMarket() { return blackMarket; }
-    BitcoinMenu getBitcoinMenu() { return bitcoinMenu; }
-    ServerEconomy getEconomy() { return economy; }
-    File getBlackMarketFile() { return blackMarketFile; }
-    YamlConfiguration getBlackMarketConfig() { return blackMarketConfig; }
-    Sounds getSounds() { return sounds; }
-
-    public static BitcoinAPI getAPI() { return api; }
 }

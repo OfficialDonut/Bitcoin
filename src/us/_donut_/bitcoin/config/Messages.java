@@ -1,21 +1,19 @@
-package us._donut_.bitcoin.configuration;
+package us._donut_.bitcoin.config;
 
 import org.bukkit.configuration.file.YamlConfiguration;
 import us._donut_.bitcoin.Bitcoin;
+import us._donut_.bitcoin.Util;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import static us._donut_.bitcoin.util.Util.*;
-
-public enum Message {
+public enum Messages {
 
     BANK_COMMAND("bank_command", "&3Amount of bitcoins in bank: &b{AMOUNT}"),
-    BEGIN_EXCHANGE("begin_exchange", Arrays.asList(" ", "&aYour balance: &2{BALANCE} bitcoins", "&aCurrent bitcoin value: &2{VALUE}", "&aEnter the amount of bitcoins you would like to sell:")),
-    BEGIN_PURCHASE("begin_purchase", Arrays.asList(" ", "&aBitcoins in bank: &2{BANK} bitcoins", "&aBitcoin cost: &2{VALUE} per bitcoin", "&aTax: &2{TAX}", "&aEnter the amount of bitcoins you would like to buy:")),
+    BEGIN_EXCHANGE("begin_exchange", Arrays.asList(" ", "&aYour balance: &2{BALANCE} bitcoins", "&aCurrent bitcoin value: &2${VALUE}", "&aEnter the amount of bitcoins you would like to sell:")),
+    BEGIN_PURCHASE("begin_purchase", Arrays.asList(" ", "&aBitcoins in bank: &2{BANK} bitcoins", "&aBitcoin cost: &2${VALUE} per bitcoin", "&aTax: &2{TAX}", "&aEnter the amount of bitcoins you would like to buy:")),
     BEGIN_TRANSFER("begin_transfer", Arrays.asList(" ", "&aYour balance: &2{BALANCE} bitcoins", "&aEnter the player and amount of bitcoins (e.g. Notch 5):")),
     BLACK_MARKET_COMMAND_INVALID_ARG("black_market_command_invalid_arg", "&cInvalid argument."),
     BLACK_MARKET_ITEM_COST("black_market_item_cost", "&6Cost: &a{COST} bitcoins"),
@@ -33,8 +31,10 @@ public enum Message {
     BLUE_TILE("blue_tile", "&9&lBlue"),
     BROWN_TILE("brown_tile", "&9&lBrown"),
     BUY_COMMAND_INVALID_ARG("buy_command_invalid_arg", "&cInvalid argument."),
+    BUY_DELAY("buy_delay", "&cYou must wait {SEC} seconds before you can buy more bitcoins from the bank."),
     BUY_ITEM_LORE("buy_item_lore", "&3Buy bitcoins from the bank"),
     BUY_ITEM_NAME("buy_item_name", "&9&lBuy Bitcoins"),
+    BUY_LIMIT("buy_limit", "&cYou can only buy {AMOUNT} bitcoins at one time."),
     CANCEL_BUTTON("cancel_button", "&c&l[Cancel]"),
     CANCEL_BUTTON_HOVER("cancel_button_hover", "&cClick to cancel"),
     CANCELLED_EXCHANGE("cancelled_exchange", "&cCancelled exchange."),
@@ -45,9 +45,17 @@ public enum Message {
     CANNOT_USE_FROM_CONSOLE("cannot_use_from_console", "&cYou cannot use this command from console."),
     CIRCULATION_COMMAND("circulation_command", Arrays.asList("&3Amount of bitcoins in circulation: &b{AMOUNT}", "&3Circulation limit: &b{LIMIT}")),
     COMMAND_NAME("command_name", "/bitcoin"),
-    COMPLETE_EXCHANGE("complete_exchange", "&aSuccessfully sold {AMOUNT} bitcoins for {NEW_AMOUNT}."),
-    COMPLETE_PURCHASE("complete_purchase", "&aSuccessfully bought {AMOUNT} bitcoins for {COST} plus {TAX} in tax."),
+    COMPLETE_EXCHANGE("complete_exchange", "&aSuccessfully sold {AMOUNT} bitcoins for ${NEW_AMOUNT}."),
+    COMPLETE_PURCHASE("complete_purchase", "&aSuccessfully bought {AMOUNT} bitcoins for ${COST} plus ${TAX} in tax."),
     COMPLETE_TRANSFER("complete_transfer", "&aSuccessfully transferred {AMOUNT} bitcoins to &2{RECIPIENT}."),
+    COMPUTER_BROKE("computer_broke", "&cYour computer broke!"),
+    COMPUTER_COMMAND_INVALID_ARG("computer_command_invalid_arg", "&cInvalid argument."),
+    COMPUTER_DISABLED("computer_disabled", "&cComputers are disabled, enable them in the config."),
+    COMPUTER_HELP("computer_help", Arrays.asList("&3Craft a computer to mine bitcoins:", "&b{RECIPE}")),
+    COMPUTER_IN_USE("computer_in_use", "&cThis computer is currently in use."),
+    COMPUTER_ITEM_LORE("computer_item_lore", Arrays.asList("Used to mine bitcoins (place to use)", "&3Right-click: &bmine bitcoins", "&3Left-click: &bcheck durability", "&3Shift+click: &bbreak")),
+    COMPUTER_ITEM_NAME("computer_item_name", "&9Computer"),
+    COMPUTER_LEFT_CLICK("computer_left_click", "&9Uses left: &b{USES}"),
     CYAN_TILE("cyan_tile", "&9&lCyan"),
     EXCEEDS_LIMIT("exceeds_limit", "&cThis amount would cause the number of bitcoins in circulation to exceed the limit of {LIMIT} bitcoins."),
     EXCHANGE_ITEM_LORE("exchange_item_lore", "&3Sell bitcoins to the bank"),
@@ -60,7 +68,7 @@ public enum Message {
     GIVE_COMMAND_INVALID_ARG("give_command_invalid_arg", "&cInvalid argument."),
     GRAY_TILE("gray_tile", "&9&lGray"),
     GREEN_TILE("green_tile", "&9&lGreen"),
-    HELP_COMMAND("help_command", Arrays.asList(" ", "&9<<< Bitcoin Commands >>>", "&3/bitcoin help: &bDisplay this page", "&3/bitcoin value: &bView current bitcoin value", "&3/bitcoin stats [player]: &bView player stats", "&3/bitcoin bank: &bView amount of bitcoins in bank", "&3/bitcoin tax: &bView the current purchase tax", "&3/bitcoin circulation: &bView circulation info", "&3/bitcoin top [bal/time/solved]: &bView players with the top stats", "&3/bitcoin mine: &bOpen mining interface", "&3/bitcoin transfer <player> <amount>: &bTransfer bitcoins", "&3/bitcoin sell <amount>: &bSell bitcoins", "&3/bitcoin buy <amount>: &bBuy bitcoins", "&3/bitcoin blackmarket: &bOpen black market", "&3/bitcoin blackmarket setslot <slot> <price> [stock]: &bEdit black market", "&3/bitcoin give <player> <amount>: &bAdd to balance", "&3/bitcoin remove <player> <amount>: &bRemove from balance", "&3/bitcoin set <player> <amount>: &bSet balance", "&3/bitcoin reset <bal/mined/solved/time>: &bReset stats", "&3/bitcoin reload: &bReload plugin", "&3/bitcoin cancel: &bCancel transfer/purchase/sell")),
+    HELP_COMMAND("help_command", Arrays.asList(" ", "&9<<< Bitcoin Commands >>>", "&3/bitcoin help: &bDisplay this page", "&3/bitcoin value: &bView current bitcoin value", "&3/bitcoin stats [player]: &bView player stats", "&3/bitcoin bank: &bView amount of bitcoins in bank", "&3/bitcoin tax: &bView the current purchase tax", "&3/bitcoin circulation: &bView circulation info", "&3/bitcoin top [bal/time/solved]: &bView players with the top stats", "&3/bitcoin mine: &bOpen mining interface", "&3/bitcoin transfer <player> <amount>: &bTransfer bitcoins", "&3/bitcoin sell <amount>: &bSell bitcoins", "&3/bitcoin buy <amount>: &bBuy bitcoins", "&3/bitcoin blackmarket: &bOpen black market", "&3/bitcoin blackmarket setslot <slot> <price> [stock]: &bEdit market", "&3/bitcoin give <player> <amount>: &bAdd to balance", "&3/bitcoin remove <player> <amount>: &bRemove from balance", "&3/bitcoin set <player> <amount>: &bSet balance", "&3/bitcoin reset <bal/mined/solved/time>: &bReset stats", "&3/bitcoin computer <player> [amount]: &bGive computer", "&3/bitcoin reload: &bReload plugin", "&3/bitcoin cancel: &bCancel transfer/purchase/sell")),
     HELP_ITEM_LORE("help_item_lore", "&3Click for list of commands"),
     HELP_ITEM_NAME("help_item_name", "&9&lHelp"),
     INACTIVE_BALANCE_RESET("inactive_balance_reset", "&cThe bank reclaimed {AMOUNT} bitcoins from {PLAYER} for inactivity."),
@@ -87,7 +95,6 @@ public enum Message {
     OTHER_PLAYER_NOT_ENOUGH_BITCOINS("other_player_not_enough_bitcoins", "&c{PLAYER} only has {BALANCE} bitcoins."),
     PINK_TILE("pink_tile", "&9&lPink"),
     PURPLE_TILE("purple_tile", "&9&lPurple"),
-    REAL_VALUE_ANNOUNCEMENT("real_value_announcement", Arrays.asList(" ", "&9<<< Bitcoin Announcement >>>", "&3Current bitcoin value: &b{VALUE}")),
     RECEIVE_BITCOINS("receive_bitcoins","&aYou received {AMOUNT} bitcoins from &2{SENDER}."),
     RED_TILE("red_tile", "&9&lRed"),
     RELOAD_COMMAND("reload_command", "&aSuccessfully reloaded bitcoin."),
@@ -111,7 +118,7 @@ public enum Message {
     STATISTIC_COMMAND_OTHER("statistic_command_other", Arrays.asList("&9<<< {PLAYER}'s Stats>>>", "&3Balance: &b{BALANCE} bitcoins", "&3Mining puzzles solved: &b{AMOUNT_SOLVED}", "&3Bitcoins mined: &b{AMOUNT_MINED}", "&3Best puzzle time: &b{MIN} minutes {SEC} seconds")),
     STATISTIC_ITEM_LORE("statistic_item_lore", Arrays.asList("&3Balance: &b{BALANCE} bitcoins", "&3Mining puzzles solved: &b{AMOUNT_SOLVED}", "&3Bitcoins mined: &b{AMOUNT_MINED}", "&3Best puzzle time: &b{MIN} minutes {SEC} seconds")),
     STATISTIC_ITEM_NAME("statistic_item_name", "&9&lStatistics"),
-    TAX_COMMAND("tax_command", "&3Purchase tax: &b{TAX}"),
+    TAX_COMMAND("tax_command", "&3Purchase tax: &b${TAX}"),
     TOP_BAL_COMMAND_FORMAT("top_bal_command_format", "&3{PLACE}. {PLAYER}: &b{BALANCE} bitcoins"),
     TOP_SOLVED_COMMAND_FORMAT("top_solved_command_format", "&3{PLACE}. {PLAYER}: &b{AMOUNT} puzzles"),
     TOP_TIME_COMMAND_FORMAT("top_time_command_format", "&3{PLACE}. {PLAYER}: &b{MIN} minutes {SEC} seconds"),
@@ -121,51 +128,71 @@ public enum Message {
     TRANSFER_COMMAND_INVALID_ARG("transfer_command_invalid_arg", "&cInvalid argument."),
     TRANSFER_ITEM_LORE("transfer_item_lore", "&3Transfer bitcoins to another account"),
     TRANSFER_ITEM_NAME("transfer_item_name", "&9&lTransfer Bitcoins"),
-    VALUE_COMMAND("value_command", "&3Current value of 1 bitcoin: &b{VALUE}"),
-    VALUE_DECREASE("value_decrease", Arrays.asList(" ", "&9<<< Bitcoin Announcement >>>", "&3New bitcoin value: &b{VALUE}", "&cValue has decreased by: &4{CHANGE}")),
-    VALUE_INCREASE("value_increase", Arrays.asList(" ", "&9<<< Bitcoin Announcement >>>", "&3New bitcoin value: &b{VALUE}", "&aValue has increased by: &2{CHANGE}")),
+    VALUE_COMMAND("value_command", "&3Current value of 1 bitcoin: &b${VALUE}"),
+    VALUE_DECREASE("value_decrease", Arrays.asList(" ", "&9<<< Bitcoin Announcement >>>", "&3New bitcoin value: &b${VALUE}", "&cValue has decreased by: &4${CHANGE}")),
+    VALUE_INCREASE("value_increase", Arrays.asList(" ", "&9<<< Bitcoin Announcement >>>", "&3New bitcoin value: &b${VALUE}", "&aValue has increased by: &2${CHANGE}")),
     WHITE_TILE("white_tile", "&9&lWhite"),
     YELLOW_TILE("yellow_tile", "&9&lYellow");
 
-    private static File messagesFile;
-    private static YamlConfiguration messagesConfig;
-    private static Map<Message, String> messages = new HashMap<>();
+    private static Map<Messages, String> messages = new HashMap<>();
 
     public static void reload() {
         messages.clear();
-        messagesFile = new File(Bitcoin.plugin.getDataFolder(), "messages.yml");
-        messagesConfig = YamlConfiguration.loadConfiguration(messagesFile);
+        File messagesFile = new File(Bitcoin.getInstance().getDataFolder(), "messages.yml");
+        YamlConfiguration messagesConfig = YamlConfiguration.loadConfiguration(messagesFile);
         if (!messagesFile.exists()) {
             messagesConfig.options().header("Messages accept color codes." + System.lineSeparator() + "Messages can be multiple lines." + System.lineSeparator() + "{VARIABLES} are filled in with their respective values, they can only be used in the messages that they are in by default");
-            Bitcoin.plugin.getLogger().info("Generated messages.yml!");
+            Bitcoin.getInstance().getLogger().info("Generated messages.yml!");
         }
-        loadDefaults();
-        loadMessages();
-    }
 
-    private static void loadDefaults() {
-        Arrays.stream(Message.values()).forEach(message -> messagesConfig.addDefault(message.path, message.defaultValue));
+        for (Messages message : values()) {
+            messagesConfig.addDefault(message.key, message.defaultValue);
+        }
         messagesConfig.options().copyDefaults(true);
-        saveYml(messagesFile, messagesConfig);
+        Util.saveYml(messagesFile, messagesConfig);
+
+        for (Messages message : values()) {
+            List<String> messageValue = messagesConfig.getStringList(message.key);
+            messages.put(message, Util.color(messageValue.isEmpty() ? messagesConfig.getString(message.key) : String.join("\n", messageValue)));
+        }
     }
 
-    private static void loadMessages() {
-        Arrays.stream(Message.values()).forEach(message -> {
-            List<String> messageValue = messagesConfig.getStringList(message.path);
-            messages.put(message, colorMessage(messageValue.isEmpty() ? messagesConfig.getString(message.path) : String.join("\n", messagesConfig.getStringList(message.path))));
-        });
+    public static String get(String key, Object... args) {
+        Messages messageEnum = Messages.valueOf(key.toUpperCase());
+        List<String> vars = messageEnum.variables;
+        String message = messageEnum.toString();
+        for (int i = 0; i < vars.size(); i++) {
+            if (i < args.length) {
+                message = message.replace(vars.get(i), String.valueOf(args[i]));
+            }
+        }
+        return message;
     }
 
-    private String path;
+    private String key;
     private Object defaultValue;
+    private List<String> variables;
+    private Pattern varPattern = Pattern.compile("\\{.+?}");
 
-    Message(String path, Object defaultValue) {
-        this.path = path;
+    Messages(String key, Object defaultValue) {
+        this.key = key;
         this.defaultValue = defaultValue;
+        variables = getVariables();
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<String> getVariables() {
+        List<String> vars = new ArrayList<>();
+        String message = defaultValue instanceof String ? (String) defaultValue : String.join("\n", (List<String>) defaultValue);
+        Matcher matcher = varPattern.matcher(message);
+        while (matcher.find()) {
+            vars.add(matcher.group());
+        }
+        return vars;
     }
 
     @Override
     public String toString() {
-        return messages.get(this);
+        return Util.color(messages.get(this));
     }
 }

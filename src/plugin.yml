@@ -1,11 +1,11 @@
 name: Bitcoin
-version: 2.2
+version: 2.2.5
 author: _Donut_
 main: us._donut_.bitcoin.Bitcoin
 website: https://www.spigotmc.org/resources/bitcoin.52085/
 depend: [Vault]
 softdepend: [PlayerPoints, PointsAPI, PlaceholderAPI, MVdWPlaceholderAPI]
-api-version: 1.13
+api-version: '1.14'
 commands:
   bitcoin:
     description: Opens bitcoin menu
@@ -14,6 +14,7 @@ commands:
 permissions:
   bitcoin.*:
     description: Gives access to all bitcoin commands
+    default: op
     children:
       bitcoin.main: true
       bitcoin.help: true
@@ -31,6 +32,7 @@ permissions:
       bitcoin.stats: true
       bitcoin.top: true
       bitcoin.circulation: true
+      bitcoin.computer: true
       bitcoin.reset: true
       bitcoin.gui.transfer: true
       bitcoin.gui.buy: true
@@ -48,70 +50,49 @@ permissions:
     default: true
   bitcoin.value:
     description: Allows /bitcoin value
-    default: op
   bitcoin.bank:
     description: Allows /bitcoin bank
-    default: op
   bitcoin.tax:
     description: Allows /bitcoin tax
-    default: op
   bitcoin.mine:
     description: Allows /bitcoin mine
-    default: op
   bitcoin.sell:
     description: Allows /bitcoin sell
-    default: op
   bitcoin.buy:
     description: Allows /bitcoin buy
-    default: op
   bitcoin.transfer:
     description: Allows /bitcoin transfer
-    default: op
   bitcoin.give:
     description: Allows /bitcoin give
-    default: op
   bitcoin.remove:
     description: Allows /bitcoin remove
-    default: op
   bitcoin.set:
     description: Allows /bitcoin set
-    default: op
   bitcoin.reload:
     description: Allows /bitcoin reload
-    default: op
   bitcoin.stats:
     description: Allows /bitcoin stats
-    default: op
   bitcoin.top:
     description: Allows /bitcoin top
-    default: op
   bitcoin.circulation:
     description: Allows /bitcoin circulation
-    default: op
+  bitcoin.computer:
+    description: Allows /bitcoin computer
   bitcoin.reset:
     description: Allows /bitcoin reset
-    default: op
   bitcoin.gui.transfer:
     description: Allows transferring from GUI
-    default: op
   bitcoin.gui.buy:
     description: Allows buying from GUI
-    default: op
   bitcoin.gui.sell:
     description: Allows selling from GUI
-    default: op
   bitcoin.gui.mine:
     description: Allows mining from GUI
-    default: op
   bitcoin.blackmarket:
     description: Allows /bitcoin blackmarket
-    default: op
   bitcoin.blackmarket.edit:
     description: Allows editing of black market
-    default: op
   bitcoin.gui.blackmarket:
     description: Allows black market item in GUI
-    default: op
   bitcoin.gui.help:
     description: Allows help item in GUI
-    default: op
