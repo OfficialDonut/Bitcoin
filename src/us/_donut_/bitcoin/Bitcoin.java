@@ -40,8 +40,8 @@ public class Bitcoin extends JavaPlugin {
         reload();
         BitcoinAPI.init();
         ServerEconomy.hook();
-        if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) { new PapiHook().hook(); }
-        if (getServer().getPluginManager().isPluginEnabled("MVdWPlaceholderAPI")) { MVdWHook.hook(); };
+        if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) { new PapiHook().register(); }
+        if (getServer().getPluginManager().isPluginEnabled("MVdWPlaceholderAPI")) { MVdWHook.hook(); }
         getLogger().info("Enabled!");
     }
 

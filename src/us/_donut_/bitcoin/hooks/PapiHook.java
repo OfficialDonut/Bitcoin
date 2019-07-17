@@ -1,21 +1,47 @@
 package us._donut_.bitcoin.hooks;
 
-import me.clip.placeholderapi.external.EZPlaceholderHook;
+import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.entity.Player;
 import us._donut_.bitcoin.Bitcoin;
 import us._donut_.bitcoin.BitcoinManager;
 import us._donut_.bitcoin.PlayerDataManager;
 import us._donut_.bitcoin.Util;
 
-public class PapiHook extends EZPlaceholderHook {
+public class PapiHook extends PlaceholderExpansion {
 
+    private Bitcoin plugin;
     private BitcoinManager bitcoinManager;
     private PlayerDataManager playerDataManager;
 
     public PapiHook() {
-        super(Bitcoin.getInstance(), "bitcoin");
+        plugin = Bitcoin.getInstance();
         bitcoinManager = BitcoinManager.getInstance();
         playerDataManager = PlayerDataManager.getInstance();
+    }
+
+    @Override
+    public boolean persist() {
+        return true;
+    }
+
+    @Override
+    public boolean canRegister() {
+        return true;
+    }
+
+    @Override
+    public String getAuthor() {
+        return plugin.getDescription().getAuthors().toString();
+    }
+
+    @Override
+    public String getVersion() {
+        return plugin.getDescription().getVersion();
+    }
+
+    @Override
+    public String getIdentifier() {
+        return "bitcoin";
     }
 
     @Override
