@@ -4,9 +4,13 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.CommandBlock;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -137,8 +141,11 @@ public class ComputerManager implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onInteract(PlayerInteractEvent event) {
+        if (event.isCancelled() || event.useInteractedBlock() == Event.Result.DENY || event.useItemInHand() == Event.Result.DENY) {
+            return;
+        }
         if (enabled && event.getHand() == EquipmentSlot.HAND) {
             Block block = event.getClickedBlock();
             ItemStack item = event.getItem();
@@ -151,38 +158,50 @@ public class ComputerManager implements Listener {
                     if (usesLeft != null) {
                         event.setCancelled(true);
                         if (player.isSneaking()) {
-                            block.breakNaturally();
-                            if (player.getGameMode() != GameMode.CREATIVE) {
-                                block.getWorld().dropItemNaturally(block.getLocation(), getComputerItem(usesLeft));
+                            BlockBreakEvent breakEvent = new BlockBreakEvent(block, player);
+                            Bukkit.getPluginManager().callEvent(breakEvent);
+                            if (!breakEvent.isCancelled()) {
+                                block.breakNaturally();
+                                if (player.getGameMode() != GameMode.CREATIVE) {
+                                    block.getWorld().dropItemNaturally(block.getLocation(), getComputerItem(usesLeft));
+                                }
                             }
                         } else if (action == Action.RIGHT_CLICK_BLOCK) {
-                            if (computerUsers.values().contains(commandBlock)) {
+                            if (computerUsers.containsValue(commandBlock)) {
                                 player.sendMessage(Messages.COMPUTER_IN_USE.toString());
                             } else {
                                 computerUsers.put(player, commandBlock);
                                 Bukkit.getScheduler().runTask(plugin, () -> miningManager.openInterface(player));
                             }
                         } else if (action == Action.LEFT_CLICK_BLOCK) {
-                            if (usesLeft > 0) {
-                                player.sendMessage(Messages.get("computer_left_click", usesLeft));
+                            BlockBreakEvent breakEvent = new BlockBreakEvent(block, player);
+                            Bukkit.getPluginManager().callEvent(breakEvent);
+                            if (!breakEvent.isCancelled()) {
+                                if (usesLeft > 0) {
+                                    player.sendMessage(Messages.get("computer_left_click", usesLeft));
+                                }
                             }
                         }
                     }
                 } else if (item != null && computerItem.isSimilar(item) && action == Action.RIGHT_CLICK_BLOCK) {
                     if (!block.getType().isInteractable() || player.isSneaking()) {
                         event.setCancelled(true);
-                        block = block.getRelative(event.getBlockFace());
-                        block.setType(Material.COMMAND_BLOCK);
-                        ItemMeta itemMeta = item.getItemMeta();
-                        if (itemMeta != null) {
-                            Integer usesLeft = itemMeta.getPersistentDataContainer().get(usesLeftKey, PersistentDataType.INTEGER);
-                            CommandBlock commandBlock = (CommandBlock) block.getState();
-                            commandBlock.getPersistentDataContainer().set(usesLeftKey, PersistentDataType.INTEGER, usesLeft == null ? computerUses : usesLeft);
-                            commandBlock.update();
-                        }
-                        player.playSound(player.getLocation(), Sound.BLOCK_STONE_PLACE, 1, 1);
-                        if (player.getGameMode() != GameMode.CREATIVE) {
-                            item.setAmount(item.getAmount() - 1);
+                        Block placedBlock = block.getRelative(event.getBlockFace());
+                        BlockPlaceEvent placeEvent = new BlockPlaceEvent(placedBlock, block.getState(), block, item, player, true, event.getHand());
+                        Bukkit.getPluginManager().callEvent(placeEvent);
+                        if (!placeEvent.isCancelled()) {
+                            placedBlock.setType(Material.COMMAND_BLOCK);
+                            ItemMeta itemMeta = item.getItemMeta();
+                            if (itemMeta != null) {
+                                Integer usesLeft = itemMeta.getPersistentDataContainer().get(usesLeftKey, PersistentDataType.INTEGER);
+                                CommandBlock commandBlock = (CommandBlock) placedBlock.getState();
+                                commandBlock.getPersistentDataContainer().set(usesLeftKey, PersistentDataType.INTEGER, usesLeft == null ? computerUses : usesLeft);
+                                commandBlock.update();
+                            }
+                            player.playSound(player.getLocation(), Sound.BLOCK_STONE_PLACE, 1, 1);
+                            if (player.getGameMode() != GameMode.CREATIVE) {
+                                item.setAmount(item.getAmount() - 1);
+                            }
                         }
                     }
                 }

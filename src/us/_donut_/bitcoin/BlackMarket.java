@@ -123,37 +123,40 @@ public class BlackMarket implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (blackMarketInterface.getViewers().contains(event.getWhoClicked())) {
+        /*if (blackMarketInterface.getViewers().contains(event.getWhoClicked())) {
             event.setCancelled(true);
-        }
-        if (event.getClickedInventory() != null && event.getCurrentItem() != null && blackMarketInterface.equals(event.getClickedInventory()) && event.getWhoClicked() instanceof Player) {
-            Player player = (Player) event.getWhoClicked();
-            int slot = event.getSlot();
-            if (slotItems.containsKey(slot)) {
-                ItemStack item = slotItems.get(slot);
-                double price = slotPrices.get(slot);
-                int stock = slotStocks.getOrDefault(slot, -1);
-                if (stock == 0) {
-                    player.sendMessage(Messages.BLACK_MARKET_OUT_OF_STOCK.toString());
-                    player.playSound(player.getLocation(), Sounds.get("black_market_out_of_stock"), 1, 1);
-                    return;
-                }
-                if (playerDataManager.getBalance(player.getUniqueId()) < price) {
-                    player.sendMessage(Messages.BLACK_MARKET_NOT_ENOUGH_BITCOINS.toString());
-                    player.playSound(player.getLocation(), Sounds.get("black_market_not_enough_bitcoins"), 1, 1);
-                    return;
-                }
-                playerDataManager.withdraw(player.getUniqueId(), price);
-                bitcoinManager.addToBank(price);
-                Bukkit.getScheduler().runTask(plugin, () -> player.getInventory().addItem(item.clone()));
-                player.sendMessage(Messages.get("black_market_purchase", Util.formatNumber(price)));
-                player.playSound(player.getLocation(), Sounds.get("black_market_purchase"), 1, 1);
-                if (stock > 0) {
-                    stock--;
-                    slotStocks.put(slot, stock);
-                    blackMarketConfig.set(slot + ".stock", stock);
-                    Bukkit.getScheduler().runTask(plugin, () -> blackMarketInterface.setItem(slot, getDisplayItem(slot)));
-                    Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> Util.saveYml(blackMarketFile, blackMarketConfig));
+        }*/
+        if (event.getClickedInventory() != null && blackMarketInterface.equals(event.getClickedInventory())) {
+            event.setCancelled(true);
+            if (event.getCurrentItem() != null && event.getWhoClicked() instanceof Player) {
+                Player player = (Player) event.getWhoClicked();
+                int slot = event.getSlot();
+                if (slotItems.containsKey(slot)) {
+                    ItemStack item = slotItems.get(slot);
+                    double price = slotPrices.get(slot);
+                    int stock = slotStocks.getOrDefault(slot, -1);
+                    if (stock == 0) {
+                        player.sendMessage(Messages.BLACK_MARKET_OUT_OF_STOCK.toString());
+                        player.playSound(player.getLocation(), Sounds.get("black_market_out_of_stock"), 1, 1);
+                        return;
+                    }
+                    if (playerDataManager.getBalance(player.getUniqueId()) < price) {
+                        player.sendMessage(Messages.BLACK_MARKET_NOT_ENOUGH_BITCOINS.toString());
+                        player.playSound(player.getLocation(), Sounds.get("black_market_not_enough_bitcoins"), 1, 1);
+                        return;
+                    }
+                    playerDataManager.withdraw(player.getUniqueId(), price);
+                    bitcoinManager.addToBank(price);
+                    Bukkit.getScheduler().runTask(plugin, () -> player.getInventory().addItem(item.clone()));
+                    player.sendMessage(Messages.get("black_market_purchase", Util.formatNumber(price)));
+                    player.playSound(player.getLocation(), Sounds.get("black_market_purchase"), 1, 1);
+                    if (stock > 0) {
+                        stock--;
+                        slotStocks.put(slot, stock);
+                        blackMarketConfig.set(slot + ".stock", stock);
+                        Bukkit.getScheduler().runTask(plugin, () -> blackMarketInterface.setItem(slot, getDisplayItem(slot)));
+                        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> Util.saveYml(blackMarketFile, blackMarketConfig));
+                    }
                 }
             }
         }
