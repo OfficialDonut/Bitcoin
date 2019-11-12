@@ -1,5 +1,5 @@
 name: Bitcoin
-version: '2.3.5'
+version: '2.4'
 author: _Donut_
 main: us._donut_.bitcoin.Bitcoin
 website: https://www.spigotmc.org/resources/bitcoin.52085/
