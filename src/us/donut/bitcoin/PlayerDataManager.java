@@ -1,4 +1,4 @@
-package us._donut_.bitcoin;
+package us.donut.bitcoin;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -12,6 +12,7 @@ import org.bukkit.permissions.PermissionAttachmentInfo;
 
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class PlayerDataManager implements Listener {
 
@@ -49,17 +50,15 @@ public class PlayerDataManager implements Listener {
                 YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
                 UUID uuid = UUID.fromString(file.getName().split("\\.yml")[0]);
                 OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
-                if (player != null) {
-                    playerFiles.put(uuid, file);
-                    playerConfigs.put(uuid, config);
-                    offlinePlayerCache.put(uuid, player);
-                    lastPlayedCache.put(uuid, player.getLastPlayed());
-                    balances.put(uuid, config.getDouble("balance"));
-                    bitcoinsMined.put(uuid, config.getDouble("bitcoins_mined"));
-                    puzzlesSolved.put(uuid, config.getLong("puzzles_solved"));
-                    puzzleTimes.put(uuid, config.getLong("best_puzzle_time"));
-                    displayNames.put(uuid, config.getString("display_name"));
-                }
+                playerFiles.put(uuid, file);
+                playerConfigs.put(uuid, config);
+                offlinePlayerCache.put(uuid, player);
+                lastPlayedCache.put(uuid, player.getLastPlayed());
+                balances.put(uuid, config.getDouble("balance"));
+                bitcoinsMined.put(uuid, config.getDouble("bitcoins_mined"));
+                puzzlesSolved.put(uuid, config.getLong("puzzles_solved"));
+                puzzleTimes.put(uuid, config.getLong("best_puzzle_time"));
+                displayNames.put(uuid, config.getString("display_name"));
             }
         }
     }
@@ -163,28 +162,28 @@ public class PlayerDataManager implements Listener {
     }
 
     public List<UUID> getTopBalPlayers() {
-        List<UUID> top = new ArrayList<>();
-        balances.entrySet().stream()
-                .sorted(Map.Entry.comparingByValue(Collections.reverseOrder()))
-                .forEach(entry -> top.add(entry.getKey()));
-        return top;
+        return balances.entrySet()
+                .stream()
+                .sorted((e1, e2) -> e2.getValue().compareTo(e1.getValue()))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
     }
 
     public List<UUID> getTopSolvedPlayers() {
-        List<UUID> top = new ArrayList<>();
-        puzzlesSolved.entrySet().stream()
-                .sorted(Map.Entry.comparingByValue(Collections.reverseOrder()))
-                .forEach(entry -> top.add(entry.getKey()));
-        return top;
+        return puzzlesSolved.entrySet()
+                .stream()
+                .sorted((e1, e2) -> e2.getValue().compareTo(e1.getValue()))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
     }
 
     public List<UUID> getTopTimePlayers() {
-        List<UUID> top = new ArrayList<>();
-        balances.entrySet().stream()
+        return puzzleTimes.entrySet()
+                .stream()
                 .filter(entry -> entry.getValue() > 0)
                 .sorted(Map.Entry.comparingByValue())
-                .forEach(entry -> top.add(entry.getKey()));
-        return top;
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
     }
 
     public String getDisplayName(UUID uuid) {

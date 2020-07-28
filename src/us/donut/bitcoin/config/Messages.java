@@ -1,8 +1,8 @@
-package us._donut_.bitcoin.config;
+package us.donut.bitcoin.config;
 
 import org.bukkit.configuration.file.YamlConfiguration;
-import us._donut_.bitcoin.Bitcoin;
-import us._donut_.bitcoin.Util;
+import us.donut.bitcoin.Bitcoin;
+import us.donut.bitcoin.Util;
 
 import java.io.File;
 import java.util.*;
@@ -52,10 +52,8 @@ public enum Messages {
     COMPUTER_COMMAND_INVALID_ARG("computer_command_invalid_arg", "&cInvalid argument."),
     COMPUTER_DISABLED("computer_disabled", "&cComputers are disabled, enable them in the config."),
     COMPUTER_HELP("computer_help", Arrays.asList("&3Craft a computer to mine bitcoins:", "&b{RECIPE}")),
-    COMPUTER_IN_USE("computer_in_use", "&cThis computer is currently in use."),
-    COMPUTER_ITEM_LORE("computer_item_lore", Arrays.asList("Used to mine bitcoins (place to use)", "&3Right-click: &bmine bitcoins", "&3Left-click: &bcheck durability", "&3Shift+click: &bbreak")),
+    COMPUTER_ITEM_LORE("computer_item_lore", Arrays.asList("Right click to mine bitcoins", "&9Uses left: &b{USES}")),
     COMPUTER_ITEM_NAME("computer_item_name", "&9Computer"),
-    COMPUTER_LEFT_CLICK("computer_left_click", "&9Uses left: &b{USES}"),
     CYAN_TILE("cyan_tile", "&9&lCyan"),
     EXCEEDS_LIMIT("exceeds_limit", "&cThis amount would cause the number of bitcoins in circulation to exceed the limit of {LIMIT} bitcoins."),
     EXCHANGE_ITEM_LORE("exchange_item_lore", "&3Sell bitcoins to the bank"),

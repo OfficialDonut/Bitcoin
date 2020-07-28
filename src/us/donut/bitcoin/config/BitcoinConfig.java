@@ -1,9 +1,9 @@
-package us._donut_.bitcoin.config;
+package us.donut.bitcoin.config;
 
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
-import us._donut_.bitcoin.Bitcoin;
-import us._donut_.bitcoin.Util;
+import us.donut.bitcoin.Bitcoin;
+import us.donut.bitcoin.Util;
 
 import java.io.File;
 import java.util.Arrays;
@@ -34,7 +34,7 @@ public class BitcoinConfig {
         yamlConfig.addDefault("broadcast_balance_reset_message", true);
         yamlConfig.addDefault("broadcast_real_value", true);
         yamlConfig.addDefault("circulation_limit", -1);
-        yamlConfig.addDefault("computers", false);
+        yamlConfig.addDefault("computers", true);
         yamlConfig.addDefault("computer_recipe", Arrays.asList("IRON_INGOT, REDSTONE, IRON_INGOT", "REDSTONE, DIAMOND, REDSTONE", "IRON_INGOT, REDSTONE, IRON_INGOT"));
         yamlConfig.addDefault("computer_uses_before_break", 3);
         yamlConfig.addDefault("days_of_inactivity_until_balance_reset", 30);

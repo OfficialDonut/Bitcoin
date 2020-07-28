@@ -1,7 +1,7 @@
 name: Bitcoin
-version: '2.4'
-author: _Donut_
-main: us._donut_.bitcoin.Bitcoin
+version: '2.5'
+author: Donut
+main: us.donut.bitcoin.Bitcoin
 website: https://www.spigotmc.org/resources/bitcoin.52085/
 depend: [Vault]
 softdepend: [PlayerPoints, PointsAPI, PlaceholderAPI, MVdWPlaceholderAPI]

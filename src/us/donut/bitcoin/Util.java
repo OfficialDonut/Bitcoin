@@ -1,4 +1,4 @@
-package us._donut_.bitcoin;
+package us.donut.bitcoin;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -32,15 +32,11 @@ public class Util {
     }
 
     public static long getTicksFromTime(String time) {
-        try {
-            String[] splitTime = time.split(":");
-            int hours = Integer.valueOf(splitTime[0]);
-            int minutes = Integer.valueOf(splitTime[1]);
-            if (hours > 24 || hours < 0 || minutes > 59 || minutes < 0) { return 1; }
-            return (long) (((18001 + (hours * 1000) + ((minutes / 60.0) * 1000))) % 24000);
-        } catch (NumberFormatException e) {
-            return 1;
-        }
+        String[] splitTime = time.split(":");
+        int hours = Integer.parseInt(splitTime[0]);
+        int minutes = Integer.parseInt(splitTime[1]);
+        if (hours > 24 || hours < 0 || minutes > 59 || minutes < 0) { return 1; }
+        return (long) (((18001 + (hours * 1000) + ((minutes / 60.0) * 1000))) % 24000);
     }
 
     public static double round(int places, double value) {

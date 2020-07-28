@@ -1,11 +1,11 @@
-package us._donut_.bitcoin.hooks;
+package us.donut.bitcoin.hooks;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.entity.Player;
-import us._donut_.bitcoin.Bitcoin;
-import us._donut_.bitcoin.BitcoinManager;
-import us._donut_.bitcoin.PlayerDataManager;
-import us._donut_.bitcoin.Util;
+import us.donut.bitcoin.Bitcoin;
+import us.donut.bitcoin.BitcoinManager;
+import us.donut.bitcoin.PlayerDataManager;
+import us.donut.bitcoin.Util;
 
 public class PapiHook extends PlaceholderExpansion {
 

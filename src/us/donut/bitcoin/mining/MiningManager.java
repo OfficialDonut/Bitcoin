@@ -1,4 +1,4 @@
-package us._donut_.bitcoin.mining;
+package us.donut.bitcoin.mining;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -13,13 +13,13 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
-import us._donut_.bitcoin.Bitcoin;
-import us._donut_.bitcoin.BitcoinManager;
-import us._donut_.bitcoin.PlayerDataManager;
-import us._donut_.bitcoin.Util;
-import us._donut_.bitcoin.config.BitcoinConfig;
-import us._donut_.bitcoin.config.Messages;
-import us._donut_.bitcoin.config.Sounds;
+import us.donut.bitcoin.Bitcoin;
+import us.donut.bitcoin.BitcoinManager;
+import us.donut.bitcoin.PlayerDataManager;
+import us.donut.bitcoin.Util;
+import us.donut.bitcoin.config.BitcoinConfig;
+import us.donut.bitcoin.config.Messages;
+import us.donut.bitcoin.config.Sounds;
 
 import java.util.*;
 
@@ -72,7 +72,7 @@ public class MiningManager implements Listener {
     }
 
     boolean isMiningInterface(Inventory inventory) {
-        return interfaces.values().contains(inventory);
+        return interfaces.containsValue(inventory);
     }
 
     boolean isMiningInterface(InventoryView inventoryView) {
@@ -143,6 +143,9 @@ public class MiningManager implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
+        if (isMiningInterface(event.getInventory())) {
+            event.setCancelled(true);
+        }
         Inventory inventory = event.getClickedInventory();
         if (inventory != null && isMiningInterface(inventory) && event.getWhoClicked() instanceof Player) {
             event.setCancelled(true);

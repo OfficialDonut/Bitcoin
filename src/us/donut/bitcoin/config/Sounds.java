@@ -1,9 +1,9 @@
-package us._donut_.bitcoin.config;
+package us.donut.bitcoin.config;
 
 import org.bukkit.Sound;
 import org.bukkit.configuration.file.YamlConfiguration;
-import us._donut_.bitcoin.Bitcoin;
-import us._donut_.bitcoin.Util;
+import us.donut.bitcoin.Bitcoin;
+import us.donut.bitcoin.Util;
 
 import java.io.File;
 import java.util.HashMap;

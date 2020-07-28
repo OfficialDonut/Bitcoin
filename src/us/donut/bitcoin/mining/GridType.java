@@ -1,10 +1,10 @@
-package us._donut_.bitcoin.mining;
+package us.donut.bitcoin.mining;
 
 import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import us._donut_.bitcoin.Util;
-import us._donut_.bitcoin.config.Messages;
+import us.donut.bitcoin.Util;
+import us.donut.bitcoin.config.Messages;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,7 +37,7 @@ public enum GridType {
                 Material.BROWN_STAINED_GLASS_PANE, Material.GREEN_STAINED_GLASS_PANE, Material.RED_STAINED_GLASS_PANE, Material.BLACK_STAINED_GLASS_PANE};
 
         Messages[] easyTileNames = {Messages.WHITE_TILE, Messages.ORANGE_TILE, Messages.MAGENTA_TILE, Messages.LIGHT_BLUE_TILE, Messages.YELLOW_TILE,
-                Messages.LIME_TILE, Messages.PINK_TILE, Messages.GRAY_TILE, Messages.LIGHT_GRAY_TILE, Messages.CYAN_TILE, Messages.PURPLE_TILE,
+                Messages.LIME_TILE, Messages.PINK_TILE, Messages.GRAY_TILE, Messages.CYAN_TILE, Messages.PURPLE_TILE,
                 Messages.BLUE_TILE, Messages.BROWN_TILE, Messages.GREEN_TILE, Messages.RED_TILE, Messages.BLACK_TILE};
 
         for (int i = 0; i < EASY.gridSlots.length - 1; i++) {
